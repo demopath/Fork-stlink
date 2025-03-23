@@ -1,0 +1,26 @@
+name: my-build
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: 创建 build 目录
+        run: mkdir ./build
+
+      - name: cmake 项目
+        working-directory: build
+        run: |
+          cmake -G "Visual Studio 17 2022" -A Win32 ..
+          cmake --build . --config Release --target PACKAGE
+
+      - name: 上传 stlink_build
+        uses: actions/upload-artifact@v4
+        with:
+          name: stlink-msvc
+          path: build/dist
+            
