@@ -63,6 +63,7 @@ enum stm32_flash_type {
     STM32_FLASH_TYPE_L4        = 10,
     STM32_FLASH_TYPE_L5_U5_H5  = 11,
     STM32_FLASH_TYPE_WB_WL     = 12,
+    STM32_FLASH_TYPE_WB0       = 13,
 };
 
 /* STM32 chip-ids */
@@ -72,6 +73,10 @@ enum stm32_flash_type {
 enum stm32_chipids {
     STM32_CHIPID_UNKNOWN          = 0x000,
 
+    STM32_CHIPID_WL3x             = 0x027, /* RM0511, p.176 PART_NUMBER in JTAG_ID */
+    STM32_CHIPID_WB05             = 0x028, /* RM0491, p.116 PART_NUMBER in JTAG_ID */
+    STM32_CHIPID_WB06_WB07        = 0x01e, /* RM0530, p.125 PART_NUMBER in JTAG_ID */
+    STM32_CHIPID_WB09             = 0x032, /* RM0505, p.167 PART_NUMBER in JTAG_ID */
     STM32_CHIPID_F1_MD            = 0x410, /* medium density */
     STM32_CHIPID_F2               = 0x411,
     STM32_CHIPID_F1_LD            = 0x412, /* low density */
@@ -147,29 +152,29 @@ enum stm32_chipids {
 };
 
 /* Constant STM32 option bytes base memory address */
-#define STM32_C0_OPTION_BYTES_BASE ((uint32_t) 0x1fff7800)
+#define STM32_OPTION_BYTES_BASE_C0 ((uint32_t) 0x1fff7800)
 
-#define STM32_F4_OPTION_BYTES_BASE ((uint32_t) 0x40023c14)
+#define STM32_OPTION_BYTES_BASE_F4 ((uint32_t) 0x40023c14)
 
-#define STM32_H7_OPTION_BYTES_BASE ((uint32_t) 0x52002020)
+#define STM32_OPTION_BYTES_BASE_H7 ((uint32_t) 0x52002020)
 
-#define STM32_L0_OPTION_BYTES_BASE ((uint32_t) 0x1ff80000)
-#define STM32_L1_OPTION_BYTES_BASE ((uint32_t) 0x1ff80000)
+#define STM32_OPTION_BYTES_BASE_L0 ((uint32_t) 0x1ff80000)
+#define STM32_OPTION_BYTES_BASE_L1 ((uint32_t) 0x1ff80000)
 
-#define STM32_F7_OPTION_BYTES_BASE ((uint32_t) 0x1fff0000)
+#define STM32_OPTION_BYTES_BASE_F7 ((uint32_t) 0x1fff0000)
 
-#define STM32_G0_OPTION_BYTES_BASE ((uint32_t) 0x1fff7800)
-#define STM32_L4_OPTION_BYTES_BASE ((uint32_t) 0x1fff7800)
+#define STM32_OPTION_BYTES_BASE_G0 ((uint32_t) 0x1fff7800)
+#define STM32_OPTION_BYTES_BASE_L4 ((uint32_t) 0x1fff7800)
 
-#define STM32_F2_OPTION_BYTES_BASE ((uint32_t) 0x1fffc000)
+#define STM32_OPTION_BYTES_BASE_F2 ((uint32_t) 0x1fffc000)
 
-#define STM32_F0_OPTION_BYTES_BASE ((uint32_t) 0x1ffff800)
-#define STM32_F1_OPTION_BYTES_BASE ((uint32_t) 0x1ffff800)
-#define STM32_F3_OPTION_BYTES_BASE ((uint32_t) 0x1ffff800)
-#define STM32_G4_OPTION_BYTES_BASE ((uint32_t) 0x1ffff800)
+#define STM32_OPTION_BYTES_BASE_F0 ((uint32_t) 0x1ffff800)
+#define STM32_OPTION_BYTES_BASE_F1 ((uint32_t) 0x1ffff800)
+#define STM32_OPTION_BYTES_BASE_F3 ((uint32_t) 0x1ffff800)
+#define STM32_OPTION_BYTES_BASE_G4 ((uint32_t) 0x1ffff800)
 
 /* ============ */
-/* Old defines from common.c are below */
+/* Old defines from common_legacy.c are below */
 /* ============ */
 
 /* Constant STM32 memory address */
@@ -231,6 +236,14 @@ enum stm32_chipids {
 
 #define STM32WB_RCC_AHB1ENR 0x58000048
 #define STM32WB_RCC_DMAEN 0x00000003 // DMA2EN | DMA1EN
+
+#define STM32WB0_FLASH_BASE 0x10040000
+#define STM32WB0_JTAG_ID 0x40000004
+#define STM32WB0_JTAG_PART_NR (12)
+#define STM32WB0_RCC_AHBENR 0x48400050
+#define STM32WB0_RCC_AHB_DMAEN 0x00000001
+#define STM32WB0_RCC_APB0ENR 0x48400054
+#define STM32WB0_RCC_APB0_WDGEN 0x00004000
 
 #define STM32L5_PWR_CR1 0x40007000                      // RM0438, p. 93,324
 #define STM32L5_PWR_CR1_VOS 9

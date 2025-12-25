@@ -2,15 +2,15 @@
 
 # v1.8.1
 
-Release date: 2025-03-xx
+Release date: 2025-xx-xx
 
 This release drops support for some older operating systems. Check project README for details.
 
 Updated system requirements:
 - C-Standard: C17 (ISO/IEC 9899:2018)
-- `cmake` >= 3.16.3
-- `libusb` >= 1.0.23
-- `libgtk-dev` >= 3.24.18
+- `cmake` >= 3.18.3
+- `libusb` >= 1.0.24
+- `libgtk-dev` >= 3.24.30
 
 Features:
 
@@ -24,8 +24,13 @@ Features:
 - [STM32U575/585]: Added support for OTP bytes ([#1419](https://github.com/stlink-org/stlink/pull/1419))
 - [STM32Gx]: Added erase support for multi-bank products ([#1420](https://github.com/stlink-org/stlink/pull/1420))
 - libusb-cmake as libusb provider and added support for MSVC ([#1424](https://github.com/stlink-org/stlink/pull/1424), [#1440](https://github.com/stlink-org/stlink/pull/1440))
+- Added support for STM32U073 ([#1436](https://github.com/stlink-org/stlink/pull/1436), commit [#11e357a](https://github.com/stlink-org/stlink/commit/11e357ae2a34c5f5911c0051fa513659b9bbd7fa))
 - [STM32L4Q5CG]: Added support for device ([#1438](https://github.com/stlink-org/stlink/pull/1438), [#1439](https://github.com/stlink-org/stlink/pull/1439))
-
+- Corrected and unified GitHub-Actions C/C++ CI workflow ([#1446](https://github.com/stlink-org/stlink/pull/1446), [#1449](https://github.com/stlink-org/stlink/pull/1449))
+- Make SYS_OPEN in semihosting recognize ":tt" ([#1447](https://github.com/stlink-org/stlink/pull/1447))
+- [STM32G4]: Erase pages on flash bank 2 ([#1456](https://github.com/stlink-org/stlink/pull/1456), [#1457](https://github.com/stlink-org/stlink/pull/1457))
+- STM32 flash type implementation for WB05, WB06/07, WB09, WL3x ([#1466](https://github.com/stlink-org/stlink/pull/1466))
+  
 Updates & changes:
 
 - [stlink-lib] Clarified warning message for data alignment ([#1371](https://github.com/stlink-org/stlink/pull/1371), commit [#40ee5f4](https://github.com/stlink-org/stlink/commit/40ee5f4bd1151cec65f291f0166429b061c6e5c0))
@@ -33,6 +38,8 @@ Updates & changes:
 - Debian 11 x64 doesn't work with v1.8.0 because of incompatible glibc ([#1376](https://github.com/stlink-org/stlink/pull/1376), commit [#ece34ef](https://github.com/stlink-org/stlink/commit/ece34efbce579ca7d367c58f903ffa6dc7bd96e6))
 - [STM32L4R5ZI]: gdb-multiarch uses wrong osabi ([#1386](https://github.com/stlink-org/stlink/pull/1386), [#1387](https://github.com/stlink-org/stlink/pull/1387), [#1394](https://github.com/stlink-org/stlink/pull/1394))
 - [doc] STM32H573 reports chipid 0x000 ([#1398](https://github.com/stlink-org/stlink/pull/1398), commit [#3655871](https://github.com/stlink-org/stlink/commit/3655871f8dd97294bbee191c1c7341c8a129af2f))
+- [doc] Updated README.md ([#1453](https://github.com/stlink-org/stlink/pull/1453))
+- [doc] Corrected libusb package name in installation instructions ([#1455](https://github.com/stlink-org/stlink/pull/1455))
 
 Fixes:
 
@@ -46,11 +53,14 @@ Fixes:
 - Target reset is less reliable on testing branch ([#1409](https://github.com/stlink-org/stlink/pull/1409), commit [#733893a](https://github.com/stlink-org/stlink/commit/733893a50b1cc9323765a62c456c129ed6807886))
 - Fixed STM32H7 option byte programming ([#1417](https://github.com/stlink-org/stlink/pull/1417))
 - Latest release stlink-1.8.0-win32 doesn't run ([#1364](https://github.com/stlink-org/stlink/pull/1364), [#1410](https://github.com/stlink-org/stlink/pull/1410), commit [#e493109](https://github.com/stlink-org/stlink/commit/e4931097f887d8a048d1d188388b82ced918cf08))
+- Fixed STLINK-V3 programmer lock up when no target connected ([#1399](https://github.com/stlink-org/stlink/pull/1399), [#1467](https://github.com/stlink-org/stlink/pull/1467))
 - Make path to .chip files relative to installation directory on Windows ([#1421](https://github.com/stlink-org/stlink/pull/1421))
 - Re-add support for STM32F411xC/xE option bytes read/write ([#1422](https://github.com/stlink-org/stlink/pull/1422))
 - Replaced deprecated cmd to fix package uninstall ([#1426](https://github.com/stlink-org/stlink/pull/1426))
 - Fixed compilation error -Wshorten-64-to-32 in stlink-lib/usb.c ([#1427](https://github.com/stlink-org/stlink/pull/1427))
 - st-util cannot parse -V and -F options and --freq option results in a segmentation fault ([#1428](https://github.com/stlink-org/stlink/pull/1428), [#1429](https://github.com/stlink-org/stlink/pull/1429))
+- st-util: $--freq parameter case sensitive in 1.8.0 but not on previous versions ([#1445](https://github.com/stlink-org/stlink/pull/1445), commit [#7900006](https://github.com/stlink-org/stlink/commit/7900006619ce22cb900151120f9aeebe022cd3ec))
+- [STM32F205]: st-flash broken due to introduced bug in stlink-lib/usb.c ([#1451](https://github.com/stlink-org/stlink/pull/1451), commit [#9446bf5](https://github.com/stlink-org/stlink/commit/9446bf570d23f2c1329abd313ae81197b4df4210))
 
 
 # v1.8.0

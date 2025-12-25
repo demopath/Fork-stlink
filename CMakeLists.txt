@@ -2,7 +2,7 @@
 # General cmake settings
 ###
 
-cmake_minimum_required(VERSION 3.16.3)
+cmake_minimum_required(VERSION 3.18.3)
 cmake_policy(SET CMP0042 NEW)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -171,24 +171,26 @@ add_subdirectory(inc)
 
 ## Define source- and headerfiles for stlink library
 set(STLINK_HEADERS
-        inc/backend.h
         inc/stlink.h
+        inc/stlink_backend.h
+        inc/stlink_cmd.h
         inc/stm32.h
-        inc/stm32flash.h
+        inc/stm32_flash.h
         src/stlink-lib/calculate.h
         src/stlink-lib/chipid.h
-        src/stlink-lib/commands.h
         src/stlink-lib/common_flash.h
         src/stlink-lib/flash_loader.h
         src/stlink-lib/helper.h
         src/stlink-lib/libusb_settings.h
         src/stlink-lib/lib_md5.h
         src/stlink-lib/logging.h
+        src/stlink-lib/logging_spdlog_wr.h
         src/stlink-lib/map_file.h
         src/stlink-lib/md5.h
         src/stlink-lib/option_bytes.h
-        src/stlink-lib/register.h
-        src/stlink-lib/sg.h
+        src/stlink-lib/programmer.h
+        src/stlink-lib/read_write.h
+        src/stlink-lib/sg_legacy.h
         src/stlink-lib/usb.h
         )
 
@@ -196,16 +198,17 @@ set(STLINK_SOURCE
         src/stlink-lib/calculate.c
         src/stlink-lib/chipid.c
         src/stlink-lib/common_flash.c
-        src/stlink-lib/common.c
+        src/stlink-lib/common_legacy.c
         src/stlink-lib/flash_loader.c
         src/stlink-lib/helper.c
+        src/stlink-lib/lib_md5.c
         src/stlink-lib/logging.c
         src/stlink-lib/map_file.c
-        src/stlink-lib/lib_md5.c
         src/stlink-lib/md5.c
         src/stlink-lib/option_bytes.c
+        src/stlink-lib/programmer.c
         src/stlink-lib/read_write.c
-        src/stlink-lib/sg.c
+        src/stlink-lib/sg_legacy.c
         src/stlink-lib/usb.c
         )
 

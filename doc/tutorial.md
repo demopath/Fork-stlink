@@ -115,12 +115,12 @@ Check your hardware and try to identify what you have in front of you before ass
 
 Please let us know, if you come across any further websites or tutorials that help to identify STM32 fake chips so we can list them here to help others.
 
-### c) Appearance of the warning message `WARN src/common.c: unknown chip id!`
+### c) Appearance of the warning message `WARN src/common_legacy.c: unknown chip id!`
 
 The chip ID is the main identifier for STM32 MCU and their specific type and provides primary information on flash and SRAM architecture.
 This so called `DBGMCU_IDCODE` register is allocated either at memory address `0xE0042000` or `0x40015800`.
 
-A failure of chip identification results in the error `WARN src/common.c: unknown chip id!`.
+A failure of chip identification results in the error `WARN src/common_legacy.c: unknown chip id!`.
 There are different variants of this message that refer to different issues:
 
 - `unknown chip id! 0` --> Target chip (board) is unknown.

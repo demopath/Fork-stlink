@@ -23,7 +23,7 @@ uint32_t time_ms() {
 }
 
 int32_t arg_parse_freq(const char *str) {
-    if (str == NULL) {
+    if(str == NULL) {
         return -1;                    // faulty input
     }
     
@@ -38,13 +38,13 @@ int32_t arg_parse_freq(const char *str) {
      * This is achieved by using the prefix "M".
      */
 
-    if (tail == NULL) {
+    if(tail == NULL) {
         return -1;                    // faulty integer conversion
-    } else if (tail[0] == '\0') {
+    } else if(tail[0] == '\0') {
         return value;                 // no prefix: kHz
-    } else if ((tail[0] == 'k' || tail[0] == 'K') && tail[1] == '\0') {
+    } else if((tail[0] == 'k' || tail[0] == 'K') && tail[1] == '\0') {
         return value;                 // k prefix: kHz
-    } else if (tail[0] == 'M' && tail[1] == '\0') {
+    } else if(tail[0] == 'M' && tail[1] == '\0') {
         return (value * 1000);        // M prefix: MHz
     }
     return -1;                        // invalid prefix
