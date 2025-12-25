@@ -11,7 +11,7 @@ jobs:
 
       - name: cmake 项目
         run: |
-          cmake -B build -G "Visual Studio 17 2022" -A Win32 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded ..
+          cmake -B build -G "Visual Studio 17 2022" -A Win32 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded .
           cmake --build build --config Release
 
       - name: 上传 stlink_build
@@ -20,4 +20,5 @@ jobs:
           name: stlink-msvc
           path: build/dist
             
+
 
