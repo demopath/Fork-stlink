@@ -1188,6 +1188,11 @@ int32_t stlink_chip_id(stlink_t *sl, uint32_t *chip_id) {
   } else if(cpu_id.part == STM32_REG_CMx_CPUID_PARTNO_CM33) {
     // STM32L5 (RM0438, pg2157)
     ret = stlink_read_debug32(sl, 0xE0044000, chip_id);
+    if (!ret && !(*chip_id)) {
+      // STM32H5 reports 0 at the L5 DBGMCU address; its DBGMCU_IDCODE is at
+      // 0x44024000 (RM0481, DEV_ID 0x484).
+      ret = stlink_read_debug32(sl, 0x44024000, chip_id);
+    }
   } else /* СM3, СM4, CM7 */ {
     // default chipid address
 
@@ -1219,6 +1224,51 @@ int32_t stlink_chip_id(stlink_t *sl, uint32_t *chip_id) {
   return (ret);
 }
 
+/*
+ * Determine which access port (AP) exposes the CPU.
+ *
+ * Most STM32 targets use the default AP0 and need no INIT_AP, so the legacy
+ * path is preserved exactly: if a valid ARM CPUID is seen we leave sl->ap = 0
+ * and never emit INIT_AP. Some parts (e.g. STM32H5) route debug and memory
+ * access through AP1; for those the default AP shows no recognisable core, so
+ * we initialise AP1 and re-check. INIT_AP also sets the AP context used by the
+ * debug-register access path, so this must happen before any CPUID/chip-id read.
+ */
+// Returns true if a Cortex CPU is reachable through the currently selected AP.
+//
+// This is a liveness probe, NOT chip identification: we are not decoding the
+// CPUID value to recognise a particular part. We read CPUID (0xE000ED00)
+// *through the selected MEM-AP* and check only that it looks like a valid ARM
+// core. Reading the wrong AP does not fail cleanly -- the MEM-AP read returns
+// garbage (e.g. 0x00000018 on STM32H5/AP0) rather than an error -- so checking
+// the return code alone is not enough; the ARM implementer field is what tells
+// a real core apart from a bus fault.
+static bool stlink_ap_has_cpu(stlink_t *sl) {
+  cortex_m3_cpuid_t cpu_id;
+  return (stlink_cpu_id(sl, &cpu_id) == 0 &&
+          cpu_id.implementer_id == STM32_REG_CMx_CPUID_IMPL_ARM);
+}
+
+static void stlink_probe_ap(stlink_t *sl) {
+  if (stlink_ap_has_cpu(sl)) {
+    return; // CPU visible on the default AP0
+  }
+
+  if (sl->backend->init_ap == NULL) {
+    return; // backend cannot select an AP (legacy SCSI)
+  }
+
+  // Some parts (e.g. STM32H5) expose the CPU only on AP1.
+  if (sl->backend->init_ap(sl, 1) == 0) {
+    sl->ap = 1;
+    if (stlink_ap_has_cpu(sl)) {
+      ILOG("CPU found on access port 1 (AP1)\n");
+      return;
+    }
+    sl->ap = 0; // no CPU on AP1 either; restore default for the error path
+  }
+}
+
 /**
  * Reads and decodes the flash parameters, as dynamically as possible
  * @param sl
@@ -1231,6 +1281,8 @@ int32_t stlink_load_device_params(stlink_t *sl) {
   const struct stlink_chipid_params *params = NULL;
   stlink_core_id(sl);
   uint32_t flash_size;
+
+  stlink_probe_ap(sl);
 
   if(stlink_chip_id(sl, &sl->chip_id)) {
     return (-1);
