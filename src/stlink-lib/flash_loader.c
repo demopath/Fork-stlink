@@ -542,6 +542,9 @@ static void set_flash_cr_pg(stlink_t *sl, uint32_t bank) {
   } else if(sl->flash_type == STM32_FLASH_TYPE_L5_U5_H5) {
     cr_reg = STM32_FLASH_L5_NSCR;
     x |= (1 << FLASH_CR_PG);
+  } else if(sl->flash_type == STM32_FLASH_TYPE_H5) {
+    cr_reg = STM32_FLASH_H5_NSCR;
+    x |= (1 << STM32_FLASH_H5_NSCR_PG);
   } else if(sl->flash_type == STM32_FLASH_TYPE_G0 ||
              sl->flash_type == STM32_FLASH_TYPE_G4) {
     cr_reg = STM32_FLASH_Gx_CR;
@@ -686,10 +689,14 @@ int32_t stlink_flashloader_start(stlink_t *sl, flash_loader_t *fl) {
              sl->flash_type == STM32_FLASH_TYPE_G0 ||
              sl->flash_type == STM32_FLASH_TYPE_G4 ||
              sl->flash_type == STM32_FLASH_TYPE_L5_U5_H5 ||
+             sl->flash_type == STM32_FLASH_TYPE_H5 ||
              sl->flash_type == STM32_FLASH_TYPE_C0) {
     ILOG("Starting Flash write for WB/G0/G4/L5/U5/H5/C0\n");
 
     unlock_flash_if(sl);         // unlock flash if necessary
+    if(sl->flash_type == STM32_FLASH_TYPE_H5) {
+      clear_flash_error(sl);     // clear stale H5 NSSR flags before programming
+    }
     set_flash_cr_pg(sl, BANK_1); // set PG 'allow programming' bit
   } else if(sl->flash_type == STM32_FLASH_TYPE_L0_L1) {
     ILOG("Starting Flash write for L0\n");
@@ -793,12 +800,34 @@ int32_t stlink_flashloader_write(stlink_t *sl, flash_loader_t *fl, stm32_addr_t 
 
       off += size;
     }
+  } else if(sl->flash_type == STM32_FLASH_TYPE_H5) {
+    // H5 programs one 128-bit quad-word (16 bytes) at a time. Write each
+    // quad-word in a single MEM-AP transfer and poll busy once, rather than
+    // four word-writes each followed by a busy poll (the L5 path below). On
+    // AP1 every access is a multi-transfer MEM-AP op, so this is ~4x less USB.
+    if(len % 16) {
+      len += 16 - len % 16; // pad up to a whole quad-word (buffer is page-sized)
+    }
+    for(off = 0; off < len; off += 16) {
+      if((off % sl->flash_pgsz) == 0) {
+        fprintf(stdout, "%3u/%-3u pages written\n",
+                (off / sl->flash_pgsz + 1), (len / sl->flash_pgsz));
+        fflush(stdout);
+      }
+      uint32_t chunk = (len - off) < 16 ? (len - off) : 16;
+      memset(sl->q_buf, 0xff, 16);          // pad a short final quad-word with 0xff
+      memcpy(sl->q_buf, base + off, chunk);
+      stlink_write_mem32(sl, addr + off, 16);
+      wait_flash_busy(sl);
+    }
+    fprintf(stdout, "\n");
   } else if(sl->flash_type == STM32_FLASH_TYPE_WB_WL ||
              sl->flash_type == STM32_FLASH_TYPE_G0 ||
              sl->flash_type == STM32_FLASH_TYPE_G4 ||
              sl->flash_type == STM32_FLASH_TYPE_L5_U5_H5 ||
              sl->flash_type == STM32_FLASH_TYPE_C0) {
-  
+
+    // L5/U5 program in 16-byte units.
     if(sl->flash_type == STM32_FLASH_TYPE_L5_U5_H5 && (len % 16)) {
         WLOG("Aligning data size to 16 bytes\n");
         len += 16 - len % 16;
@@ -957,6 +986,7 @@ int32_t stlink_flashloader_stop(stlink_t *sl, flash_loader_t *fl) {
       (sl->flash_type == STM32_FLASH_TYPE_H7) ||
       (sl->flash_type == STM32_FLASH_TYPE_L4) ||
       (sl->flash_type == STM32_FLASH_TYPE_L5_U5_H5) ||
+      (sl->flash_type == STM32_FLASH_TYPE_H5) ||
       (sl->flash_type == STM32_FLASH_TYPE_WB_WL)) {
 
     clear_flash_cr_pg(sl, BANK_1);

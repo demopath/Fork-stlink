@@ -398,6 +398,41 @@
 #define STM32_FLASH_L5_NSSR_BSY 16        /* Busy */
 #define STM32_FLASH_L5_NSSR_ERROR_MASK (0x20fa)
 
+// == STM32H5 == (RM0481)
+// H5 non-secure flash registers. Bit positions and the dedicated clear-control
+// register (NSCCR) differ from L5/U5, so H5 has its own flash type.
+#define STM32_FLASH_H5_REGS_ADDR ((uint32_t) 0x40022000)
+#define STM32_FLASH_H5_ACR    (STM32_FLASH_H5_REGS_ADDR + 0x00)
+#define STM32_FLASH_H5_NSKEYR (STM32_FLASH_H5_REGS_ADDR + 0x04)
+#define STM32_FLASH_H5_OPTKEYR (STM32_FLASH_H5_REGS_ADDR + 0x10)
+#define STM32_FLASH_H5_NSSR   (STM32_FLASH_H5_REGS_ADDR + 0x20)
+#define STM32_FLASH_H5_NSCR   (STM32_FLASH_H5_REGS_ADDR + 0x28)
+#define STM32_FLASH_H5_NSCCR  (STM32_FLASH_H5_REGS_ADDR + 0x30)
+
+// FLASH_NSCR control bits (RM0481)
+#define STM32_FLASH_H5_NSCR_LOCK 0
+#define STM32_FLASH_H5_NSCR_PG   1   /* Program */
+#define STM32_FLASH_H5_NSCR_SER  2   /* Sector erase */
+#define STM32_FLASH_H5_NSCR_BER  3   /* Bank erase */
+#define STM32_FLASH_H5_NSCR_STRT 5   /* Start */
+#define STM32_FLASH_H5_NSCR_SNB  6   /* Sector number [12:6] (7 bits) */
+#define STM32_FLASH_H5_NSCR_SNB_MASK (0x7Fu << STM32_FLASH_H5_NSCR_SNB)
+#define STM32_FLASH_H5_NSCR_MER  15  /* Mass erase */
+#define STM32_FLASH_H5_NSCR_BKSEL 31 /* Bank selector */
+
+// FLASH_NSSR status bits (RM0481)
+#define STM32_FLASH_H5_NSSR_BSY  0   /* Busy */
+#define STM32_FLASH_H5_NSSR_EOP  16  /* End of operation */
+#define STM32_FLASH_H5_NSSR_WRPERR 17
+#define STM32_FLASH_H5_NSSR_PGSERR 18
+#define STM32_FLASH_H5_NSSR_STRBERR 19
+#define STM32_FLASH_H5_NSSR_INCERR 20
+#define STM32_FLASH_H5_NSSR_OPTCHANGEERR 23
+#define STM32_FLASH_H5_NSSR_ERROR_MASK (0x009E0000) /* WRPERR|PGSERR|STRBERR|INCERR|OPTCHANGEERR */
+
+// FLASH_NSCCR: write 1 to clear the matching NSSR flag (bits 16..23)
+#define STM32_FLASH_H5_NSCCR_CLEAR_ALL (0x00FF0000)
+
 // == STM32WB0 == (RM0530)
 // WB0 FLASH registers
 #define STM32_FLASH_WB0_REGS_ADDR ((uint32_t) 0x40001000)
