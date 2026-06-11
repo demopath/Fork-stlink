@@ -803,6 +803,7 @@ int32_t _stlink_usb_read_all_regs(stlink_t *sl, struct stlink_reg *regp) {
         cmd[i++] = STLINK_DEBUG_APIV2_READALLREGS;
     }
 
+    cmd[i] = sl->ap; // access port selector (0 = AP0)
     size = send_recv(slu, 1, cmd, slu->cmd_len, data, rep_len, CMD_CHECK_STATUS, "READALLREGS");
 
     if(size < 0) {
@@ -856,6 +857,7 @@ int32_t _stlink_usb_read_reg(stlink_t *sl, int32_t r_idx, struct stlink_reg *reg
     }
 
     cmd[i++] = (uint8_t) r_idx;
+    cmd[i] = sl->ap; // access port selector, after the register index (0 = AP0)
     size = send_recv(slu, 1, cmd, slu->cmd_len, data, rep_len, CMD_CHECK_RETRY, "READREG");
 
     if(size < 0) {
@@ -1025,6 +1027,7 @@ int32_t _stlink_usb_write_reg(stlink_t *sl, uint32_t reg, int32_t idx) {
 
     cmd[i++] = idx;
     write_uint32(&cmd[i], reg);
+    cmd[i + 4] = sl->ap; // access port selector, after the register data (0 = AP0)
     size = send_recv(slu, 1, cmd, slu->cmd_len, data, rep_len, CMD_CHECK_RETRY, "WRITEREG");
 
     return (size < 0 ? -1 : 0);
