@@ -127,6 +127,26 @@ static const uint8_t loader_code_stm32f4_lv[] = {
     0x0e, 0x00, 0x00, 0x00
 };
 
+// flashloaders/stm32h5.s -- 128-bit quad-word programming, waits on NSSR BSY
+static const uint8_t loader_code_stm32h5[] = {
+    0xdf, 0xf8, 0x34, 0xc0,
+    0xdf, 0xf8, 0x34, 0xa0,
+    0xe2, 0x44, 0x04, 0x68,
+    0x45, 0x68, 0x86, 0x68,
+    0xc7, 0x68, 0x0c, 0x60,
+    0x4d, 0x60, 0x8e, 0x60,
+    0xcf, 0x60, 0x00, 0xf1,
+    0x10, 0x00, 0x01, 0xf1,
+    0x10, 0x01, 0xbf, 0xf3,
+    0x4f, 0x8f, 0xda, 0xf8,
+    0x00, 0x40, 0x14, 0xf0,
+    0x01, 0x0f, 0xfa, 0xd1,
+    0x10, 0x3a, 0xea, 0xdc,
+    0x00, 0xbe, 0x00, 0xbf,
+    0x00, 0x20, 0x02, 0x40,
+    0x20, 0x00, 0x00, 0x00
+};
+
 // flashloaders/stm32l4.s
 static const uint8_t loader_code_stm32l4[] = {
     0xdf, 0xf8, 0x28, 0xc0,
@@ -325,6 +345,9 @@ int32_t stlink_flash_loader_write_to_sram(stlink_t *sl, stm32_addr_t* addr, uint
     } else if(sl->flash_type == STM32_FLASH_TYPE_WB0) {
         loader_code = loader_code_stm32wb0;
         loader_size = sizeof(loader_code_stm32wb0);
+    } else if(sl->flash_type == STM32_FLASH_TYPE_H5) {
+        loader_code = loader_code_stm32h5;
+        loader_size = sizeof(loader_code_stm32h5);
     } else if((sl->chip_id == STM32_CHIPID_L4) ||
                (sl->chip_id == STM32_CHIPID_L41x_L42x) ||
                (sl->chip_id == STM32_CHIPID_L43x_L44x) ||
@@ -358,8 +381,9 @@ int32_t stlink_flash_loader_run(stlink_t *sl, flash_loader_t* fl, stm32_addr_t t
     uint32_t dhcsr, dfsr, cfsr, hfsr;
     uint16_t padded_size = size, pad_modulo = 1;
     
-    if(sl->flash_type == STM32_FLASH_TYPE_WB0) {
-        pad_modulo = 16;
+    if(sl->flash_type == STM32_FLASH_TYPE_WB0 ||
+        sl->flash_type == STM32_FLASH_TYPE_H5) {
+        pad_modulo = 16; // H5 programs a 128-bit quad-word at a time
     }
     uint16_t unaligned_cnt = size % pad_modulo;
     if (unaligned_cnt) {
@@ -685,18 +709,26 @@ int32_t stlink_flashloader_start(stlink_t *sl, flash_loader_t *fl) {
 
     // set programming mode
     set_flash_cr_pg(sl, BANK_1);
+  } else if(sl->flash_type == STM32_FLASH_TYPE_H5) {
+    ILOG("Starting Flash write for H5\n");
+
+    // H5 programs via an SRAM loader, so it must be staged into SRAM first
+    // (this sets fl->loader_addr / fl->buf_addr used by the loader run).
+    if(stlink_flash_loader_init(sl, fl) == -1) {
+      ELOG("stlink_flash_loader_init() == -1\n");
+      return (-1);
+    }
+
+    unlock_flash_if(sl);         // unlock the flash control register
+    set_flash_cr_pg(sl, BANK_1); // set PG 'allow programming' bit
   } else if(sl->flash_type == STM32_FLASH_TYPE_WB_WL ||
              sl->flash_type == STM32_FLASH_TYPE_G0 ||
              sl->flash_type == STM32_FLASH_TYPE_G4 ||
              sl->flash_type == STM32_FLASH_TYPE_L5_U5_H5 ||
-             sl->flash_type == STM32_FLASH_TYPE_H5 ||
              sl->flash_type == STM32_FLASH_TYPE_C0) {
-    ILOG("Starting Flash write for WB/G0/G4/L5/U5/H5/C0\n");
+    ILOG("Starting Flash write for WB/G0/G4/L5/U5/C0\n");
 
     unlock_flash_if(sl);         // unlock flash if necessary
-    if(sl->flash_type == STM32_FLASH_TYPE_H5) {
-      clear_flash_error(sl);     // clear stale H5 NSSR flags before programming
-    }
     set_flash_cr_pg(sl, BANK_1); // set PG 'allow programming' bit
   } else if(sl->flash_type == STM32_FLASH_TYPE_L0_L1) {
     ILOG("Starting Flash write for L0\n");
@@ -787,6 +819,7 @@ int32_t stlink_flashloader_write(stlink_t *sl, flash_loader_t *fl, stm32_addr_t 
   if((sl->flash_type == STM32_FLASH_TYPE_F2_F4) ||
       (sl->flash_type == STM32_FLASH_TYPE_F7) ||
       (sl->flash_type == STM32_FLASH_TYPE_L4) ||
+      (sl->flash_type == STM32_FLASH_TYPE_H5) ||
       (sl->flash_type == STM32_FLASH_TYPE_WB0 && is_exclusively_flash)) {
     uint32_t buf_size = sl->sram_size - 0x1000;
     buf_size = buf_size > 0x8000 ? 0x8000 : buf_size;
@@ -800,27 +833,6 @@ int32_t stlink_flashloader_write(stlink_t *sl, flash_loader_t *fl, stm32_addr_t 
 
       off += size;
     }
-  } else if(sl->flash_type == STM32_FLASH_TYPE_H5) {
-    // H5 programs one 128-bit quad-word (16 bytes) at a time. Write each
-    // quad-word in a single MEM-AP transfer and poll busy once, rather than
-    // four word-writes each followed by a busy poll (the L5 path below). On
-    // AP1 every access is a multi-transfer MEM-AP op, so this is ~4x less USB.
-    if(len % 16) {
-      len += 16 - len % 16; // pad up to a whole quad-word (buffer is page-sized)
-    }
-    for(off = 0; off < len; off += 16) {
-      if((off % sl->flash_pgsz) == 0) {
-        fprintf(stdout, "%3u/%-3u pages written\n",
-                (off / sl->flash_pgsz + 1), (len / sl->flash_pgsz));
-        fflush(stdout);
-      }
-      uint32_t chunk = (len - off) < 16 ? (len - off) : 16;
-      memset(sl->q_buf, 0xff, 16);          // pad a short final quad-word with 0xff
-      memcpy(sl->q_buf, base + off, chunk);
-      stlink_write_mem32(sl, addr + off, 16);
-      wait_flash_busy(sl);
-    }
-    fprintf(stdout, "\n");
   } else if(sl->flash_type == STM32_FLASH_TYPE_WB_WL ||
              sl->flash_type == STM32_FLASH_TYPE_G0 ||
              sl->flash_type == STM32_FLASH_TYPE_G4 ||
