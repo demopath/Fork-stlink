@@ -1306,6 +1306,27 @@ int32_t stlink_load_device_params(stlink_t *sl) {
   sl->sram_base = STM32_SRAM_BASE;
   stlink_read_debug32(sl, (params->flash_size_reg) & ~3, &flash_size);
 
+  // On AP1 targets (e.g. STM32H5) the flash-size register lives in the
+  // system-flash info region. Running firmware can leave that region
+  // unreadable, in which case the read returns a bogus value. Only then do we
+  // fall back to halting the core at its reset vector -- which restores access
+  // -- and read again; a cooperative or absent firmware is left running
+  // undisturbed (so --hot-plug stays non-intrusive). The halt arms
+  // DEMCR.VC_CORERESET, which lives in the debug power domain and survives
+  // NRST, so disarm it afterwards to keep the board's reset button working.
+  if(sl->ap != 0) {
+    uint32_t size_kb = (params->flash_size_reg & 2) ? (flash_size >> 16) : flash_size;
+    size_kb &= 0xffff;
+    if(size_kb == 0 || size_kb > 0x2000 /* > 8 MiB */) {
+      WLOG("Bogus flash size (0x%08x) on AP%d, retrying after reset-halt\n",
+           flash_size, sl->ap);
+      if(!stlink_soft_reset(sl, 1 /* halt on reset */)) {
+        stlink_read_debug32(sl, (params->flash_size_reg) & ~3, &flash_size);
+        stlink_write_debug32(sl, STM32_REG_CM3_DEMCR, STM32_REG_CM3_DEMCR_TRCENA);
+      }
+    }
+  }
+
   if(params->flash_size_reg & 2) {
     flash_size = flash_size >> 16;
   }
