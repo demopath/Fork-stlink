@@ -1051,6 +1051,18 @@ static void set_flash_cr_mer(stlink_t *sl, bool v, uint32_t bank) {
   stlink_write_debug32(sl, cr_reg, val);
 }
 
+/*
+ * Read the STM32H5 SWAP_BANK option bit. When set, the two physical banks are
+ * mapped swapped in the address space; the BKSEL erase selector targets the
+ * physical bank and ignores SWAP_BANK (RM0481), so the sector erase below has
+ * to invert BKSEL to match a logical address.
+ */
+static bool stlink_h5_bank_swapped(stlink_t *sl) {
+  uint32_t optsr = 0;
+  stlink_read_debug32(sl, STM32_FLASH_H5_OPTSR_CUR, &optsr);
+  return (optsr >> STM32_FLASH_H5_OPTSR_SWAP_BANK) & 1u;
+}
+
 /**
  * Erase a page of flash, assumes sl is fully populated with things like
  * chip/core ids
@@ -1247,14 +1259,21 @@ int32_t stlink_erase_flash_page(stlink_t *sl, stm32_addr_t flashaddr) {
     unlock_flash_if(sl);
     clear_flash_error(sl); // clear stale NSSR flags through NSCCR
 
+    // BKSEL selects the physical bank and ignores the SWAP_BANK option, so
+    // invert it against the logical address when the banks are swapped (RM0481).
+    bool swap_bank = stlink_h5_bank_swapped(sl);
+    bool upper_half = (flashaddr - STM32_FLASH_BASE) >= sl->flash_size / 2;
+    if(upper_half) {
+      flash_page = (flashaddr - STM32_FLASH_BASE - sl->flash_size / 2) / sl->flash_pgsz;
+    } else {
+      flash_page = (flashaddr - STM32_FLASH_BASE) / sl->flash_pgsz;
+    }
+
     stlink_read_debug32(sl, STM32_FLASH_H5_NSCR, &val);
     val &= ~(STM32_FLASH_H5_NSCR_SNB_MASK | (1u << STM32_FLASH_H5_NSCR_BKSEL) |
              (1u << STM32_FLASH_H5_NSCR_MER) | (1u << STM32_FLASH_H5_NSCR_PG));
-    if((flashaddr - STM32_FLASH_BASE) >= sl->flash_size / 2) {
-      flash_page = (flashaddr - STM32_FLASH_BASE - sl->flash_size / 2) / sl->flash_pgsz;
-      val |= (1u << STM32_FLASH_H5_NSCR_BKSEL); // erase bank 2
-    } else {
-      flash_page = (flashaddr - STM32_FLASH_BASE) / sl->flash_pgsz; // erase bank 1
+    if(upper_half != swap_bank) {
+      val |= (1u << STM32_FLASH_H5_NSCR_BKSEL);
     }
     val |= (1u << STM32_FLASH_H5_NSCR_SER) | ((flash_page & 0x7F) << STM32_FLASH_H5_NSCR_SNB);
     stlink_write_debug32(sl, STM32_FLASH_H5_NSCR, val);

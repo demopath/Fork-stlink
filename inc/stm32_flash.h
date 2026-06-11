@@ -408,6 +408,11 @@
 #define STM32_FLASH_H5_NSSR   (STM32_FLASH_H5_REGS_ADDR + 0x20)
 #define STM32_FLASH_H5_NSCR   (STM32_FLASH_H5_REGS_ADDR + 0x28)
 #define STM32_FLASH_H5_NSCCR  (STM32_FLASH_H5_REGS_ADDR + 0x30)
+#define STM32_FLASH_H5_OPTSR_CUR (STM32_FLASH_H5_REGS_ADDR + 0x50)
+
+// FLASH_OPTSR_CUR: SWAP_BANK reports whether the two physical banks are mapped
+// swapped in the address space (RM0481).
+#define STM32_FLASH_H5_OPTSR_SWAP_BANK 31
 
 // FLASH_NSCR control bits (RM0481)
 #define STM32_FLASH_H5_NSCR_LOCK 0
