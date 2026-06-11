@@ -1407,6 +1407,13 @@ int32_t stlink_target_connect(stlink_t *sl, enum connect_type connect) {
   if(connect == CONNECT_UNDER_RESET) {
     stlink_enter_swd_mode(sl);
 
+    // Select the access port before the halt/reset sequence below. On targets
+    // whose CPU is on a non-default AP (e.g. STM32H5 on AP1) every debug access
+    // here would otherwise run on AP0 and silently fail -- the core would not
+    // actually halt, the S_RESET_ST check would misreport "NRST not connected",
+    // and the soft reset would error on AIRCR.
+    stlink_probe_ap(sl);
+
     stlink_jtag_reset(sl, STLINK_DEBUG_APIV2_DRIVE_NRST_LOW);
 
     // try to halt the core before reset
