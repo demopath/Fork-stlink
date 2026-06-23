@@ -14,6 +14,7 @@
 #include <chipid.h>
 #include <helper.h>
 #include <usb.h>
+#include <remote.h>
 
 static void usage(void) {
     puts("st-info --version");
@@ -83,6 +84,7 @@ static int32_t print_data(int32_t ac, char **av) {
     stlink_t* sl = NULL;
     enum connect_type connect = CONNECT_NORMAL;
     int32_t freq = 0;
+    const char *remote = NULL;
 
     if(strcmp(av[1], "--version") == 0) {
         printf("v%s\n", STLINK_VERSION);
@@ -107,6 +109,11 @@ static int32_t print_data(int32_t ac, char **av) {
         } else if(strncmp(av[i], "--freq=", 7) == 0) {
             freq = arg_parse_freq(av[i] + 7);
             if(freq >= 0) { continue; }
+        } else if(strcmp(av[i], "--remote") == 0) {
+            if(++i < ac) { remote = av[i]; continue; }
+        } else if(strncmp(av[i], "--remote=", 9) == 0) {
+            remote = av[i] + 9;
+            continue;
         }
 
         printf("Incorrect argument: %s\n\n", av[i]);
@@ -114,17 +121,23 @@ static int32_t print_data(int32_t ac, char **av) {
         return (-1);
     }
 
-    // probe needs all devices unclaimed
-    if(strcmp(av[1], "--probe") == 0) {
+    // probe needs all devices unclaimed (local only; a remote serves one device)
+    if(strcmp(av[1], "--probe") == 0 && remote == NULL) {
         stlink_probe(connect, freq);
         return (0);
     }
 
-    // open first st-link device
-    sl = stlink_open_usb(0, connect, NULL, freq);
+    // open first st-link device (or the remote one)
+    if(remote) {
+        sl = stlink_open_remote_str(0, remote, connect, freq);
+    } else {
+        sl = stlink_open_usb(0, connect, NULL, freq);
+    }
     if(sl == NULL) { return (-1); }
 
-    if(strcmp(av[1], "--serial") == 0) {
+    if(strcmp(av[1], "--probe") == 0) {
+        stlink_print_info(sl);
+    } else if(strcmp(av[1], "--serial") == 0) {
         printf("%s\n", sl->serial);
     } else if(strcmp(av[1], "--flash") == 0) {
         printf("0x%x\n", sl->flash_size);
