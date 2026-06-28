@@ -209,7 +209,7 @@ int32_t parse_options(int32_t argc, char** argv, st_state_t *st) {
             break;
         case SERIAL_OPTION:
             printf("use serial %s\n", optarg);
-            memcpy(st->serialnumber, optarg, STLINK_SERIAL_BUFFER_SIZE);
+            snprintf(st->serialnumber, STLINK_SERIAL_BUFFER_SIZE, "%s", optarg);
             break;
         }
 
@@ -364,7 +364,7 @@ char* make_memory_map(stlink_t *sl) {
         snprintf(map, sz, memory_map_template_F4,
                  sl->sram_size);
     } else if(sl->chip_id == STM32_CHIPID_F4_DE) {
-        strcpy(map, memory_map_template_F4_DE);
+        snprintf(map, sz, "%s", memory_map_template_F4_DE);
     } else if(sl->core_id == STM32_CORE_ID_M7F_SWD) {
         snprintf(map, sz, memory_map_template_F7,
                  sl->sram_size);
@@ -373,7 +373,7 @@ char* make_memory_map(stlink_t *sl) {
                  sl->flash_size,
                  sl->flash_pgsz);
     } else if(sl->chip_id == STM32_CHIPID_F4_HD) {
-        strcpy(map, memory_map_template_F4_HD);
+        snprintf(map, sz, "%s", memory_map_template_F4_HD);
     } else if(sl->chip_id == STM32_CHIPID_F2) {
         snprintf(map, sz, memory_map_template_F2,
                  sl->flash_size,
@@ -991,7 +991,7 @@ int32_t serve(stlink_t *sl, st_state_t *st) {
 
             uint32_t queryNameLength = (uint32_t) (separator - &packet[1]);
             char* queryName = calloc(1, queryNameLength + 1);
-            strncpy(queryName, &packet[1], queryNameLength);
+            memcpy(queryName, &packet[1], queryNameLength);
 
             DLOG("query: %s;%s\n", queryName, params);
 
@@ -1035,7 +1035,7 @@ int32_t serve(stlink_t *sl, st_state_t *st) {
                     } else {
                         reply = calloc(1, length + 2);
                         reply[0] = 'm';
-                        strncpy(&reply[1], data, length);
+                        memcpy(&reply[1], data, length);
                     }
                 }
             } else if(!strncmp(queryName, "Rcmd,", 4)) {
@@ -1351,7 +1351,7 @@ int32_t serve(stlink_t *sl, st_state_t *st) {
             reply = calloc(1, 8 * 16 + 1);
 
             for(int32_t i = 0; i < 16; i++) {
-                sprintf(&reply[i * 8], "%08x", (uint32_t) htonl(regp.r[i]));
+                snprintf(&reply[i * 8], 9, "%08x", (uint32_t) htonl(regp.r[i]));
             }
 
             break;
@@ -1400,7 +1400,7 @@ int32_t serve(stlink_t *sl, st_state_t *st) {
             if(reply == NULL) {
                 // if reply is set to "E00", skip
                 reply = calloc(1, 8 + 1);
-                sprintf(reply, "%08x", myreg);
+                snprintf(reply, 9, "%08x", myreg);
             }
 
             break;
@@ -1450,7 +1450,7 @@ int32_t serve(stlink_t *sl, st_state_t *st) {
 
             for(int32_t i = 0; i < 16; i++) {
                 char str[9] = {0};
-                strncpy(str, &packet[1 + i * 8], 8);
+                memcpy(str, &packet[1 + i * 8], 8);
                 uint32_t reg = (uint32_t) strtoul(str, NULL, 16);
                 ret = stlink_write_reg(sl, ntohl(reg), i);
 
