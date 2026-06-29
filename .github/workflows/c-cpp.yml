@@ -216,11 +216,6 @@ jobs:
         run: |
           choco install visualstudio2022buildtools -y --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
 
-      # Install libusb (if needed)
-      - name: Install libusb
-        run: |
-          choco install libusb -y
-
       - name: Configure project (Release)
         run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
 
@@ -232,6 +227,7 @@ jobs:
         run: ctest --output-on-failure --parallel 4
 
   # Cross-compilation for MinGW (Windows)
+  mingw_cross_compile:
     name: MinGW Cross-Compilation (Windows)
     runs-on: ubuntu-24.04
     steps:
@@ -252,9 +248,9 @@ jobs:
             -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ \
             -DCMAKE_RC_COMPILER=x86_64-w64-mingw32-windres \
             -DCMAKE_FIND_ROOT_PATH=/usr/x86_64-w64-mingw32 \
-            -DLIBUSB_INCLUDE_DIR=/usr/x86_64-w64-mingw32/include/libusb-1.0 \
-            -DLIBUSB_LIBRARY=/usr/x86_64-w64-mingw32/lib/libusb-1.0.a \
-            -DCMAKE_BUILD_TYPE=Release \
+            -DLIBUSB_INCLUDE_DIR=/usr/include/libusb-1.0 \
+            -DLIBUSB_LIBRARY=/usr/lib/x86_64-linux-gnu/libusb-1.0.a \
+            -DSTLINK_GENERATE_GUI=OFF \
             ..
           make
           rm -rf build-mingw
