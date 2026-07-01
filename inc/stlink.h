@@ -203,6 +203,7 @@ struct _stlink {
     int32_t opt;
     uint32_t core_id;               // set by stlink_core_id(), result from STLINK_DEBUGREADCOREID
     uint32_t chip_id;               // set by stlink_load_device_params(), used to identify flash and sram
+    uint8_t ap;                     // set by stlink_probe_ap(), access port for debug/memory access (0 = AP0)
     enum target_state core_stat;    // set by stlink_status()
 
     char serial[STLINK_SERIAL_BUFFER_SIZE];
