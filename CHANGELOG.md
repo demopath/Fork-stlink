@@ -29,7 +29,7 @@ Features:
 - [STM32L4Q5CG]: Added support for device ([#1438](https://github.com/stlink-org/stlink/pull/1438), [#1439](https://github.com/stlink-org/stlink/pull/1439))
 - Corrected and unified GitHub-Actions C/C++ CI workflow ([#1446](https://github.com/stlink-org/stlink/pull/1446), [#1449](https://github.com/stlink-org/stlink/pull/1449))
 - Make SYS_OPEN in semihosting recognize ":tt" ([#1447](https://github.com/stlink-org/stlink/pull/1447))
-- [feature] Implementation of flash erase in stlink-gui ([#1452](https://github.com/stlink-org/stlink/pull/1452), [#1486](https://github.com/stlink-org/stlink/pull/1486))
+- Implementation of flash erase in stlink-gui ([#1452](https://github.com/stlink-org/stlink/pull/1452), [#1486](https://github.com/stlink-org/stlink/pull/1486))
 - [STM32G4]: Erase pages on flash bank 2 ([#1456](https://github.com/stlink-org/stlink/pull/1456), [#1457](https://github.com/stlink-org/stlink/pull/1457))
 - STM32 flash type implementation for WB05, WB06/07, WB09, WL3x ([#1466](https://github.com/stlink-org/stlink/pull/1466))
 - Make st-info --probe run probes in parallel ([#1483](https://github.com/stlink-org/stlink/pull/1483))

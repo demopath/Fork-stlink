@@ -82,6 +82,7 @@ int32_t _stlink_usb_status_v2(stlink_t *sl);
 int32_t _stlink_usb_status(stlink_t * sl);
 int32_t _stlink_usb_force_debug(stlink_t *sl);
 int32_t _stlink_usb_enter_swd_mode(stlink_t * sl);
+int32_t _stlink_usb_init_ap(stlink_t * sl, uint8_t ap);
 int32_t _stlink_usb_exit_dfu_mode(stlink_t* sl);
 int32_t _stlink_usb_reset(stlink_t * sl);
 int32_t _stlink_usb_jtag_reset(stlink_t * sl, int32_t value);

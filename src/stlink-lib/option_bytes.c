@@ -932,7 +932,7 @@ int32_t stlink_write_option_bytes(stlink_t *sl, stm32_addr_t addr, uint8_t *base
   case STM32_FLASH_TYPE_WB_WL:
     ret = stlink_write_option_bytes_wb(sl, addr, base, len);
     break;
-  case STM32_FLASH_TYPE_L5_U5_H5:
+  case STM32_FLASH_TYPE_L5_U5:
     ret = stlink_write_option_bytes_l5(sl, addr, base, len);
     break;
   default:
