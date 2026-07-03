@@ -259,6 +259,15 @@ int32_t _stlink_usb_read_debug32(stlink_t *sl, uint32_t addr, uint32_t *data) {
     ssize_t size;
     const int32_t rep_len = 8;
 
+    // On targets that live on a non-default AP (e.g. STM32H5 on AP1) the native
+    // READDEBUGREG path does not honour the selected AP. The debug registers are
+    // memory-mapped in the PPB, so route the access through the MEM-AP instead.
+    if (sl->ap) {
+        if (_stlink_usb_read_mem32(sl, addr, 4) != 0) { return (-1); }
+        *data = read_uint32(sl->q_buf, 0);
+        return (0);
+    }
+
     int32_t i = fill_command(sl, SG_DXFER_FROM_DEV, rep_len);
     cmd[i++] = STLINK_DEBUG_COMMAND;
     cmd[i++] = STLINK_DEBUG_APIV2_READDEBUGREG;
@@ -280,6 +289,12 @@ int32_t _stlink_usb_write_debug32(stlink_t *sl, uint32_t addr, uint32_t data) {
     unsigned char* const cmd  = sl->c_buf;
     ssize_t size;
     const int32_t rep_len = 2;
+
+    // See _stlink_usb_read_debug32: route via the MEM-AP when not on AP0.
+    if (sl->ap) {
+        write_uint32(sl->q_buf, data);
+        return (_stlink_usb_write_mem32(sl, addr, 4));
+    }
 
     int32_t i = fill_command(sl, SG_DXFER_FROM_DEV, rep_len);
     cmd[i++] = STLINK_DEBUG_COMMAND;
@@ -325,6 +340,7 @@ int32_t _stlink_usb_write_mem32(stlink_t *sl, uint32_t addr, uint16_t len) {
     cmd[i++] = STLINK_DEBUG_WRITEMEM_32BIT;
     write_uint32(&cmd[i], addr);
     write_uint16(&cmd[i + 4], len);
+    cmd[i + 6] = sl->ap; // access port selector (0 = AP0)
     ret = send_only(slu, 0, cmd, slu->cmd_len, "WRITEMEM_32BIT");
 
     if(ret == -1) { return (ret); }
@@ -353,6 +369,7 @@ int32_t _stlink_usb_write_mem8(stlink_t *sl, uint32_t addr, uint16_t len) {
     cmd[i++] = STLINK_DEBUG_WRITEMEM_8BIT;
     write_uint32(&cmd[i], addr);
     write_uint16(&cmd[i + 4], len);
+    cmd[i + 6] = sl->ap; // access port selector (0 = AP0)
     ret = send_only(slu, 0, cmd, slu->cmd_len, "WRITEMEM_8BIT");
 
     if(ret == -1) { return (ret); }
@@ -507,6 +524,24 @@ int32_t _stlink_usb_enter_swd_mode(stlink_t * sl) {
 
     cmd[i++] = STLINK_DEBUG_ENTER_SWD;
     size = send_recv(slu, 1, cmd, slu->cmd_len, data, rep_len, CMD_CHECK_RETRY, "ENTER_SWD");
+
+    return (size < 0 ? -1 : 0);
+}
+
+// Select and initialise an access port (MEM-AP). Required for targets whose
+// debug/memory access is not on the default AP0 (e.g. STM32H5 uses AP1).
+int32_t _stlink_usb_init_ap(stlink_t * sl, uint8_t ap) {
+    struct stlink_libusb * const slu = sl->backend_data;
+    unsigned char* const cmd  = sl->c_buf;
+    unsigned char* const data = sl->q_buf;
+    ssize_t size;
+    const uint32_t rep_len = 2;
+    int32_t i = fill_command(sl, SG_DXFER_FROM_DEV, rep_len);
+
+    cmd[i++] = STLINK_DEBUG_COMMAND;
+    cmd[i++] = STLINK_DEBUG_APIV2_INIT_AP;
+    cmd[i++] = ap;
+    size = send_recv(slu, 1, cmd, slu->cmd_len, data, rep_len, CMD_CHECK_RETRY, "INIT_AP");
 
     return (size < 0 ? -1 : 0);
 }
@@ -736,6 +771,7 @@ int32_t _stlink_usb_read_mem32(stlink_t *sl, uint32_t addr, uint16_t len) {
     cmd[i++] = STLINK_DEBUG_READMEM_32BIT;
     write_uint32(&cmd[i], addr);
     write_uint16(&cmd[i + 4], len);
+    cmd[i + 6] = sl->ap; // access port selector (0 = AP0)
     size = send_recv(slu, 1, cmd, slu->cmd_len, data, len, CMD_CHECK_NO, "READMEM_32BIT");
 
     if(size < 0) {
@@ -767,6 +803,7 @@ int32_t _stlink_usb_read_all_regs(stlink_t *sl, struct stlink_reg *regp) {
         cmd[i++] = STLINK_DEBUG_APIV2_READALLREGS;
     }
 
+    cmd[i] = sl->ap; // access port selector (0 = AP0)
     size = send_recv(slu, 1, cmd, slu->cmd_len, data, rep_len, CMD_CHECK_STATUS, "READALLREGS");
 
     if(size < 0) {
@@ -820,6 +857,7 @@ int32_t _stlink_usb_read_reg(stlink_t *sl, int32_t r_idx, struct stlink_reg *reg
     }
 
     cmd[i++] = (uint8_t) r_idx;
+    cmd[i] = sl->ap; // access port selector, after the register index (0 = AP0)
     size = send_recv(slu, 1, cmd, slu->cmd_len, data, rep_len, CMD_CHECK_RETRY, "READREG");
 
     if(size < 0) {
@@ -989,6 +1027,7 @@ int32_t _stlink_usb_write_reg(stlink_t *sl, uint32_t reg, int32_t idx) {
 
     cmd[i++] = idx;
     write_uint32(&cmd[i], reg);
+    cmd[i + 4] = sl->ap; // access port selector, after the register data (0 = AP0)
     size = send_recv(slu, 1, cmd, slu->cmd_len, data, rep_len, CMD_CHECK_RETRY, "WRITEREG");
 
     return (size < 0 ? -1 : 0);
@@ -1103,7 +1142,8 @@ static stlink_backend_t _stlink_usb_backend = {
     _stlink_usb_set_swdclk,
     _stlink_usb_enable_trace,
     _stlink_usb_disable_trace,
-    _stlink_usb_read_trace
+    _stlink_usb_read_trace,
+    _stlink_usb_init_ap
 };
 
 /* Argument structure for threaded probing */
