@@ -283,11 +283,11 @@ set_target_properties(${STLINK_LIB_SHARED} PROPERTIES
         WINDOWS_EXPORT_ALL_SYMBOLS ON
 )
 
-# Link shared library
+# Link shared library using modern imported target
 if (WIN32)
-    target_link_libraries(${STLINK_LIB_SHARED} ${LIBUSB_LIBRARY} ${SSP_LIB} wsock32 ws2_32)
+    target_link_libraries(${STLINK_LIB_SHARED} libusb::libusb ${SSP_LIB} wsock32 ws2_32)
 else ()
-    target_link_libraries(${STLINK_LIB_SHARED} ${LIBUSB_LIBRARY} ${SSP_LIB})
+    target_link_libraries(${STLINK_LIB_SHARED} libusb::libusb ${SSP_LIB})
 endif()
 
 # For MSVC:
@@ -331,11 +331,11 @@ set_target_properties(${STLINK_LIB_STATIC} PROPERTIES
                         OUTPUT_NAME ${STLINK_LIB_STATIC_OUTPUT_NAME}
                         )
 
-# Link static library
+# Link static library using modern imported target
 if (WIN32)
-    target_link_libraries(${STLINK_LIB_STATIC} ${LIBUSB_LIBRARY} ${SSP_LIB} wsock32 ws2_32)
+    target_link_libraries(${STLINK_LIB_STATIC} libusb::libusb ${SSP_LIB} wsock32 ws2_32)
 else ()
-    target_link_libraries(${STLINK_LIB_STATIC} ${LIBUSB_LIBRARY} ${SSP_LIB})
+    target_link_libraries(${STLINK_LIB_STATIC} libusb::libusb ${SSP_LIB})
 endif()
 
 install(TARGETS ${STLINK_LIB_STATIC} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})

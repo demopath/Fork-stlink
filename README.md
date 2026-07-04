@@ -44,6 +44,7 @@ The STlink toolset includes:
 - `st-flash` - a flash manipulation tool
 - `st-trace` - a logging tool to record information on execution
 - `st-util` - a GDB server (supported in Visual Studio Code / VSCodium via the [Cortex-Debug](https://github.com/Marus/cortex-debug) plugin)
+- `st-server` - serves a local ST-LINK over TCP for remote stlink tools
 - `stlink-lib` - a communication library
 - `stlink-gui` - a GUI-Interface _[optional]_
 

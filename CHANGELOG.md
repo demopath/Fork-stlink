@@ -27,13 +27,13 @@ Features:
 - libusb-cmake as libusb provider and added support for MSVC ([#1424](https://github.com/stlink-org/stlink/pull/1424), [#1440](https://github.com/stlink-org/stlink/pull/1440))
 - Added support for STM32U073 ([#1436](https://github.com/stlink-org/stlink/pull/1436), commit [#11e357a](https://github.com/stlink-org/stlink/commit/11e357ae2a34c5f5911c0051fa513659b9bbd7fa))
 - [STM32L4Q5CG]: Added support for device ([#1438](https://github.com/stlink-org/stlink/pull/1438), [#1439](https://github.com/stlink-org/stlink/pull/1439))
-- Corrected and unified GitHub-Actions C/C++ CI workflow ([#1446](https://github.com/stlink-org/stlink/pull/1446), [#1449](https://github.com/stlink-org/stlink/pull/1449))
 - Make SYS_OPEN in semihosting recognize ":tt" ([#1447](https://github.com/stlink-org/stlink/pull/1447))
 - Implementation of flash erase in stlink-gui ([#1452](https://github.com/stlink-org/stlink/pull/1452), [#1486](https://github.com/stlink-org/stlink/pull/1486))
 - [STM32G4]: Erase pages on flash bank 2 ([#1456](https://github.com/stlink-org/stlink/pull/1456), [#1457](https://github.com/stlink-org/stlink/pull/1457))
 - STM32 flash type implementation for WB05, WB06/07, WB09, WL3x ([#1466](https://github.com/stlink-org/stlink/pull/1466))
 - Make st-info --probe run probes in parallel ([#1483](https://github.com/stlink-org/stlink/pull/1483))
 - Added voltage printout and query for st-info ([#1487](https://github.com/stlink-org/stlink/pull/1487))
+- Added st-server (and remote backend) to support remote control of an STLINK programmer ([#1496](https://github.com/stlink-org/stlink/pull/1496))
 
 Updates & changes:
 
@@ -42,6 +42,7 @@ Updates & changes:
 - Debian 11 x64 doesn't work with v1.8.0 because of incompatible glibc ([#1376](https://github.com/stlink-org/stlink/pull/1376), commit [#ece34ef](https://github.com/stlink-org/stlink/commit/ece34efbce579ca7d367c58f903ffa6dc7bd96e6))
 - [STM32L4R5ZI]: gdb-multiarch uses wrong osabi ([#1386](https://github.com/stlink-org/stlink/pull/1386), [#1387](https://github.com/stlink-org/stlink/pull/1387), [#1394](https://github.com/stlink-org/stlink/pull/1394))
 - [doc] STM32H573 reports chipid 0x000 ([#1398](https://github.com/stlink-org/stlink/pull/1398), commit [#3655871](https://github.com/stlink-org/stlink/commit/3655871f8dd97294bbee191c1c7341c8a129af2f))
+- Corrected and unified GitHub-Actions C/C++ CI workflow ([#1446](https://github.com/stlink-org/stlink/pull/1446), [#1449](https://github.com/stlink-org/stlink/pull/1449))
 - [doc] Updated README.md ([#1453](https://github.com/stlink-org/stlink/pull/1453))
 - [doc] Corrected libusb package name in installation instructions ([#1455](https://github.com/stlink-org/stlink/pull/1455))
 
@@ -68,6 +69,7 @@ Fixes:
 - Compilation: Multiple 64 bit to 32 bit narrowing problems in source code ([#1463](https://github.com/stlink-org/stlink/pull/1463), commit [#54d6de5](https://github.com/stlink-org/stlink/commit/54d6de5ae20cbdec1da49ab97c05406612276ebb))
 - Fixed STLINK-V3 programmer lock up when no target connected ([#1467](https://github.com/stlink-org/stlink/pull/1467), commit [#1894b70](https://github.com/stlink-org/stlink/commit/1894b700dee05a031958371ff593bf53d30a93ca))
 - Fixed Win32 gettimeofday implementation ([#1468](https://github.com/stlink-org/stlink/pull/1468), commit [#db953ea](https://github.com/stlink-org/stlink/commit/db953eaf0b7b49e84ee3c556e3e4b974b3ebbb38))
+- Use bounded strlcpy/snprintf in gdb-server.c ([#1495](https://github.com/stlink-org/stlink/pull/1495))
 
 
 # v1.8.0
@@ -176,6 +178,7 @@ Fixes:
 - Do not crash when the STLink chip returns a voltage factor of zero ([#1343](https://github.com/stlink-org/stlink/pull/1343))
 - stlink-gui: failed to allocate 139988352155568 bytes ([#1356](https://github.com/stlink-org/stlink/pull/1356))
 - [STM32U575RGT6]: Verification failed at offset 43008 ([#1362](https://github.com/stlink-org/stlink/pull/1362), commit [#0145bae](https://github.com/stlink-org/stlink/commit/0145baeb2e3bac31bf9d3cbd0dab38d70618d46b))
+- Use real F4 sector sizes for STM32F410/F413 erase ([#1494](https://github.com/stlink-org/stlink/pull/1494))
 
 
 # v1.7.0
