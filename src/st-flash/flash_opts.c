@@ -205,6 +205,17 @@ int32_t flash_get_opts(struct flash_opts* o, int32_t ac, char** av) {
             } else {
                 o->flash_size = flash_size;
             }
+        } else if(strcmp(av[0], "--remote") == 0 || starts_with(av[0], "--remote=")) {
+            if(strcmp(av[0], "--remote") == 0) {
+                ac--;
+                av++;
+
+                if(ac < 1) { return (-1); }
+
+                o->remote = av[0];
+            } else {
+                o->remote = av[0] + strlen("--remote=");
+            }
         } else if(strcmp(av[0], "--connect-under-reset") == 0) {
             o->connect = CONNECT_UNDER_RESET;
         } else if(strcmp(av[0], "--hot-plug") == 0) {

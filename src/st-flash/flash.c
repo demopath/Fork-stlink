@@ -28,6 +28,7 @@
 #include <map_file.h>
 #include <option_bytes.h>
 #include <usb.h>
+#include <remote.h>
 
 static stlink_t *connected_stlink = NULL;
 
@@ -103,7 +104,11 @@ int32_t main(int32_t ac, char** av) {
     printf("st-flash %s\n", STLINK_VERSION);
     init_chipids (STLINK_CHIPS_DIR);
 
-    sl = stlink_open_usb(o.log_level, o.connect, (char *)o.serial, o.freq);
+    if(o.remote) {
+        sl = stlink_open_remote_str(o.log_level, o.remote, o.connect, o.freq);
+    } else {
+        sl = stlink_open_usb(o.log_level, o.connect, (char *)o.serial, o.freq);
+    }
 
     if(sl == NULL) { return (-1); }
 

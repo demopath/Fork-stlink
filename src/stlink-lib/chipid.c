@@ -119,12 +119,14 @@ void process_chipfile(char *fname) {
         ts->flash_type = STM32_FLASH_TYPE_L0_L1;
       } else if(strcmp(value, "L4") == 0) {
         ts->flash_type = STM32_FLASH_TYPE_L4;
-      } else if(strcmp(value, "L5_U5_H5") == 0) {
-        ts->flash_type = STM32_FLASH_TYPE_L5_U5_H5;
+      } else if(strcmp(value, "L5_U5") == 0) {
+        ts->flash_type = STM32_FLASH_TYPE_L5_U5;
       } else if(strcmp(value, "WB_WL") == 0) {
         ts->flash_type = STM32_FLASH_TYPE_WB_WL;
       } else if(strcmp(value, "WB0") == 0) {
         ts->flash_type = STM32_FLASH_TYPE_WB0;
+      } else if(strcmp(value, "H5") == 0) {
+        ts->flash_type = STM32_FLASH_TYPE_H5;
       } else {
         ts->flash_type = STM32_FLASH_TYPE_UNKNOWN;
       }
@@ -252,8 +254,8 @@ void init_chipids(char *dir_to_scan) {
   HANDLE hFind = INVALID_HANDLE_VALUE;
   WIN32_FIND_DATAA ffd;
   char filepath[MAX_PATH] = {0};
-  DWORD filepathlen;
-  int numslash;
+  int32_t filepathlen;
+
   StringCchCopyA(filepath, STLINK_ARRAY_SIZE(filepath), dir_to_scan);
 
   if(FAILED(

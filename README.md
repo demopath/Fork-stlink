@@ -44,6 +44,7 @@ The STlink toolset includes:
 - `st-flash` - a flash manipulation tool
 - `st-trace` - a logging tool to record information on execution
 - `st-util` - a GDB server (supported in Visual Studio Code / VSCodium via the [Cortex-Debug](https://github.com/Marus/cortex-debug) plugin)
+- `st-server` - serves a local ST-LINK over TCP for remote stlink tools
 - `stlink-lib` - a communication library
 - `stlink-gui` - a GUI-Interface _[optional]_
 
@@ -79,11 +80,10 @@ We recommend to install `stlink-tools` from the package repository of the used d
 - Fedora: [(Link)](https://src.fedoraproject.org/rpms/stlink)
 - FreeBSD: Users can install from [freshports](https://www.freshports.org/devel/stlink)
 
-**macOS**:
+**macOS**
 
-**Support for macOS has been dropped with v1.8.0.**
+The `stlink-tools` toolset has to be compiled from source. No binaries are provided. Build testing occurs via CI only.
 
-Please use v1.7.0 instead, **but note that this version is no longer maintained and supported!**
 
 ## Installation from source (advanced users)
 

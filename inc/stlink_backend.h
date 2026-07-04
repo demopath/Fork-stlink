@@ -40,6 +40,7 @@
         int32_t (*trace_enable) (stlink_t * sl, uint32_t frequency);
         int32_t (*trace_disable) (stlink_t * sl);
         int32_t (*trace_read) (stlink_t * sl, uint8_t* buf, uint32_t size);
+        int32_t (*init_ap) (stlink_t * sl, uint8_t ap); // select/initialise an access port (NULL if unsupported)
     } stlink_backend_t;
 
 #endif // STLINK_BACKEND_H
