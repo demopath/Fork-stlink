@@ -30,6 +30,7 @@
 #include <stm32_register.h>
 
 #include "gdb-server.h"
+#include <remote.h>
 #include "gdb-remote.h"
 #include "memory-map.h"
 #include "semihosting.h"
@@ -47,6 +48,7 @@
 // Semihosting doesn't have a short option, we define a value to identify it
 #define SEMIHOSTING_OPTION 128
 #define SERIAL_OPTION 127
+#define REMOTE_OPTION 126
 
 // always update the FLASH_PAGE before each use, by calling stlink_calculate_pagesize
 #define FLASH_PAGE (sl->flash_pgsz)
@@ -74,6 +76,7 @@ typedef struct _st_state_t {
     char serialnumber[STLINK_SERIAL_BUFFER_SIZE];
     bool semihosting;
     const char* current_memory_map;
+    const char* remote; // --remote=host[:port]: drive an ST-LINK on another machine
 } st_state_t;
 
 
@@ -123,6 +126,7 @@ int32_t parse_options(int32_t argc, char** argv, st_state_t *st) {
         {"version", no_argument, NULL, 'V'},
         {"semihosting", no_argument, NULL, SEMIHOSTING_OPTION},
         {"serial", required_argument, NULL, SERIAL_OPTION},
+        {"remote", required_argument, NULL, REMOTE_OPTION},
         {0, 0, 0, 0},
     };
     const char * help_str = "%s - usage:\n\n"
@@ -146,6 +150,8 @@ int32_t parse_options(int32_t argc, char** argv, st_state_t *st) {
                             "\t\t\tEnable semihosting support.\n"
                             "  --serial <serial>\n"
                             "\t\t\tUse a specific serial number.\n"
+                            "  --remote <host[:port]>\n"
+                            "\t\t\tDrive an ST-LINK served by st-server on another machine.\n"
                             "\n"
                             "The STLINK device to use can be specified in the environment\n"
                             "variable STLINK_DEVICE on the format <USB_BUS>:<USB_ADDR>.\n"
@@ -211,6 +217,9 @@ int32_t parse_options(int32_t argc, char** argv, st_state_t *st) {
             printf("use serial %s\n", optarg);
             snprintf(st->serialnumber, STLINK_SERIAL_BUFFER_SIZE, "%s", optarg);
             break;
+        case REMOTE_OPTION:
+            st->remote = optarg;
+            break;
         }
 
 
@@ -240,7 +249,11 @@ int32_t main(int32_t argc, char** argv) {
 
     init_chipids (STLINK_CHIPS_DIR);
 
-    sl = stlink_open_usb(state.logging_level, state.connect_mode, state.serialnumber, state.freq);
+    if(state.remote) {
+        sl = stlink_open_remote_str(state.logging_level, state.remote, state.connect_mode, state.freq);
+    } else {
+        sl = stlink_open_usb(state.logging_level, state.connect_mode, state.serialnumber, state.freq);
+    }
     if(sl == NULL) { return (1); }
 
     if(sl->chip_id == STM32_CHIPID_UNKNOWN) {

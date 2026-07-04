@@ -2,7 +2,7 @@
 # Generate manpages
 ###
 
-set(MANPAGES st-info st-flash st-util)
+set(MANPAGES st-info st-flash st-util st-server)
 
 # Only generate manpages with pandoc in Debug builds
 if (${STLINK_GENERATE_MANPAGES})

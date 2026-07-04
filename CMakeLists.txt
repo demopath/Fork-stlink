@@ -162,6 +162,7 @@ include_directories(src/st-flash)
 include_directories(src/st-info)
 include_directories(src/st-trace)
 include_directories(src/st-util)
+include_directories(src/st-server)
 include_directories(src/stlink-lib)
 
 ## Set installation directory for header files
@@ -195,6 +196,7 @@ set(STLINK_HEADERS
         src/stlink-lib/option_bytes.h
         src/stlink-lib/programmer.h
         src/stlink-lib/read_write.h
+        src/stlink-lib/remote.h
         src/stlink-lib/sg_legacy.h
         src/stlink-lib/usb.h
         )
@@ -213,6 +215,7 @@ set(STLINK_SOURCE
         src/stlink-lib/option_bytes.c
         src/stlink-lib/programmer.c
         src/stlink-lib/read_write.c
+        src/stlink-lib/remote.c
         src/stlink-lib/sg_legacy.c
         src/stlink-lib/usb.c
         )
@@ -346,35 +349,41 @@ set(ST-FLASH_SOURCES src/st-flash/flash.c src/st-flash/flash_opts.c)
 set(ST-INFO_SOURCES src/st-info/info.c)
 set(ST-UTIL_SOURCES src/st-util/gdb-remote.c src/st-util/gdb-server.c src/st-util/semihosting.c)
 set(ST-TRACE_SOURCES src/st-trace/trace.c)
+set(ST-SERVER_SOURCES src/st-server/st-server.c)
 
 if (MSVC)
     # Add getopt to sources
     include_directories(src/win32/getopt)
     set(ST-UTIL_SOURCES "${ST-UTIL_SOURCES};src/win32/getopt/getopt.c")
     set(ST-TRACE_SOURCES "${ST-TRACE_SOURCES};src/win32/getopt/getopt.c")
+    set(ST-SERVER_SOURCES "${ST-SERVER_SOURCES};src/win32/getopt/getopt.c")
 endif()
 
 add_executable(st-flash ${ST-FLASH_SOURCES})
 add_executable(st-info ${ST-INFO_SOURCES})
 add_executable(st-util ${ST-UTIL_SOURCES})
 add_executable(st-trace ${ST-TRACE_SOURCES})
+add_executable(st-server ${ST-SERVER_SOURCES})
 
 if (WIN32)
     target_link_libraries(st-flash ${STLINK_LIB_STATIC})
     target_link_libraries(st-info ${STLINK_LIB_STATIC})
     target_link_libraries(st-util ${STLINK_LIB_STATIC})
     target_link_libraries(st-trace ${STLINK_LIB_STATIC})
+    target_link_libraries(st-server ${STLINK_LIB_STATIC})
 else ()
     target_link_libraries(st-flash ${STLINK_LIB_SHARED})
     target_link_libraries(st-info ${STLINK_LIB_SHARED})
     target_link_libraries(st-util ${STLINK_LIB_SHARED})
     target_link_libraries(st-trace ${STLINK_LIB_SHARED})
+    target_link_libraries(st-server ${STLINK_LIB_SHARED})
 endif()
 
 install(TARGETS st-flash DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(TARGETS st-info DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(TARGETS st-util DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(TARGETS st-trace DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(TARGETS st-server DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 
 ###

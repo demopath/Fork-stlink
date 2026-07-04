@@ -18,9 +18,11 @@
 #include <logging.h>
 #include <read_write.h>
 #include <usb.h>
+#include <remote.h>
 
 #define DEFAULT_LOGGING_LEVEL 50
 #define DEBUG_LOGGING_LEVEL 100
+#define REMOTE_OPTION 0x100 /* long-only option id for --remote */
 
 #define APP_RESULT_SUCCESS 0
 #define APP_RESULT_INVALID_PARAMS 1
@@ -53,6 +55,7 @@ typedef struct {
   bool reset_board;
   bool force;
   char *serial_number;
+  char *remote;
 } st_settings_t;
 
 // We use a simple state machine to parse the trace data.
@@ -124,6 +127,7 @@ static void usage(void) {
   puts("                        k=kHz, m=MHz, or g=GHz (eg. --trace=2m)");
   puts("  -n, --no-reset        Do not reset board on connection");
   puts("  -sXX, --serial=XX     Use a specific serial number");
+  puts("  --remote=HOST[:PORT]  Drive an ST-LINK served by st-server (best-effort on low-latency links)");
   puts("  -f, --force           Ignore most initialization errors");
 }
 
@@ -174,6 +178,7 @@ bool parse_options(int32_t argc, char **argv, st_settings_t *settings) {
       {"no-reset", no_argument, NULL, 'n'},
       {"serial", required_argument, NULL, 's'},
       {"force", no_argument, NULL, 'f'},
+      {"remote", required_argument, NULL, REMOTE_OPTION},
       {0, 0, 0, 0},
   };
   int32_t option_index = 0;
@@ -188,6 +193,7 @@ bool parse_options(int32_t argc, char **argv, st_settings_t *settings) {
   settings->reset_board = true;
   settings->force = false;
   settings->serial_number = NULL;
+  settings->remote = NULL;
   ugly_init(settings->logging_level);
 
   while ((c = getopt_long(argc, argv, "hVv::c:ns:f", long_options, &option_index)) != -1) {
@@ -221,6 +227,9 @@ bool parse_options(int32_t argc, char **argv, st_settings_t *settings) {
     case 's':
       settings->serial_number = optarg;
       break;
+    case REMOTE_OPTION:
+      settings->remote = optarg;
+      break;
     case '?':
       error = true;
       break;
@@ -244,6 +253,9 @@ bool parse_options(int32_t argc, char **argv, st_settings_t *settings) {
 }
 
 static stlink_t *stlink_connect(const st_settings_t *settings) {
+  if(settings->remote) {
+    return stlink_open_remote_str(settings->logging_level, settings->remote, CONNECT_HOT_PLUG, 0);
+  }
   return stlink_open_usb(settings->logging_level, false, settings->serial_number, 0);
 }
 
