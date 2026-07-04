@@ -264,7 +264,7 @@ static int32_t rb_core_id(stlink_t *sl) {
 
 static int32_t rb_status(stlink_t *sl) {
     uint8_t p[4]; uint32_t pl;
-    int32_t ret = remote_rpc(sl, RPC_STATUS, 0, 0, NULL, 0, p, sizeof(p), &pl);
+    int32_t ret = remote_rpc(sl, RPC_STATUS_REMOTE, 0, 0, NULL, 0, p, sizeof(p), &pl);
     if (ret == 0 && pl == 4) { sl->core_stat = (enum target_state)read_uint32(p, 0); }
     return (ret);
 }
@@ -589,11 +589,11 @@ int32_t stlink_remote_serve(stlink_t *sl, int32_t fd) {
             ret = sl->backend->core_id(sl);
             write_uint32(scratch, sl->core_id); rpay = scratch; rplen = 4;
             break;
-        case RPC_STATUS:
+        case RPC_STATUS_REMOTE:
             ret = sl->backend->status(sl);
             write_uint32(scratch, (uint32_t)sl->core_stat); rpay = scratch; rplen = 4;
             break;
-        case RPC_VERSION:
+        case RPC_VERSION_REMOTE:
             ret = sl->backend->version(sl);
             break;
         case RPC_READ_DEBUG32: {

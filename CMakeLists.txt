@@ -101,7 +101,7 @@ endif()
 ###
 
 find_package(libusb REQUIRED)
-add_definitions(${LIBUSB_DEFINITIONS}) #only affects MSVC, For ssize-t
+add_definitions(${LIBUSB_DEFINITIONS}) # only affects WIN32 & MSVC, for ssize-t
 
 ## Check for system-specific additional header files and libraries
 
@@ -278,7 +278,7 @@ set_target_properties(${STLINK_LIB_SHARED} PROPERTIES
 
 # Since we're not using __declspec(dllexport), WINDOWS_EXPORT_ALL_SYMBOLS is mandatory for MSVC.
 # This call will only affect MSVC, compilers/OSes ignore it.
-# TODO: Use dllexport on the desired functions
+
 set_target_properties(${STLINK_LIB_SHARED} PROPERTIES
         WINDOWS_EXPORT_ALL_SYMBOLS ON
 )
