@@ -13,6 +13,8 @@
 #include <string.h>
 #include <errno.h>
 
+#include <getopt.h>
+
 #if defined(_WIN32)
 #include <win32_socket.h>
 #else
@@ -20,7 +22,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <getopt.h>
 #endif
 
 #include <stlink.h>
