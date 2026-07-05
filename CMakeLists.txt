@@ -101,6 +101,8 @@ endif()
 ###
 
 find_package(libusb REQUIRED)
+find_package(Threads REQUIRED)
+
 add_definitions(${LIBUSB_DEFINITIONS}) # only affects WIN32 & MSVC, for ssize-t
 
 ## Check for system-specific additional header files and libraries
@@ -108,10 +110,11 @@ add_definitions(${LIBUSB_DEFINITIONS}) # only affects WIN32 & MSVC, for ssize-t
 include(CheckIncludeFile)
 include(CheckLibraryExists)
 
+# Stack Smashing Protection Library
 CHECK_LIBRARY_EXISTS(ssp __stack_chk_fail "" _stack_chk_fail_exists)
 if (_stack_chk_fail_exists)
     if (WIN32)
-        set(SSP_LIB -static ssp)
+        set(SSP_LIB -static ssp) # static linking
     else ()
         set(SSP_LIB ssp)
     endif()
@@ -289,9 +292,19 @@ set_target_properties(${STLINK_LIB_SHARED} PROPERTIES
 
 # Link shared library using modern imported target
 if (WIN32)
-    target_link_libraries(${STLINK_LIB_SHARED} libusb::libusb ${SSP_LIB} wsock32 ws2_32 Threads::Threads)
+    target_link_libraries(${STLINK_LIB_SHARED} 
+        libusb::libusb
+        Threads::Threads
+        ${SSP_LIB}
+        wsock32
+        ws2_32
+    )
 else ()
-    target_link_libraries(${STLINK_LIB_SHARED} libusb::libusb ${SSP_LIB} Threads::Threads)
+    target_link_libraries(${STLINK_LIB_SHARED}
+        libusb::libusb
+        Threads::Threads
+        ${SSP_LIB}
+    )
 endif()
 
 # For MSVC:
@@ -337,9 +350,19 @@ set_target_properties(${STLINK_LIB_STATIC} PROPERTIES
 
 # Link static library using modern imported target
 if (WIN32)
-    target_link_libraries(${STLINK_LIB_STATIC} libusb::libusb ${SSP_LIB} wsock32 ws2_32 Threads::Threads)
+    target_link_libraries(${STLINK_LIB_STATIC}
+        libusb::libusb
+        Threads::Threads
+        ${SSP_LIB}
+        wsock32
+        ws2_32
+    )
 else ()
-    target_link_libraries(${STLINK_LIB_STATIC} libusb::libusb ${SSP_LIB} Threads::Threads)
+    target_link_libraries(${STLINK_LIB_STATIC}
+        libusb::libusb
+        Threads::Threads
+        ${SSP_LIB}
+    )
 endif()
 
 install(TARGETS ${STLINK_LIB_STATIC} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})

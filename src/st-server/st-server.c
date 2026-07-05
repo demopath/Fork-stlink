@@ -17,6 +17,7 @@
 
 #if defined(_WIN32)
 #include <win32_socket.h>
+#include <getopt.h>
 #else
 #include <unistd.h>
 #include <sys/socket.h>
