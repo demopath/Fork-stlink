@@ -13,7 +13,7 @@
 #else
 #include <unistd.h>
 #include <poll.h>
-#endif
+#endif // _WIN32
 
 #include "gdb-remote.h"
 
