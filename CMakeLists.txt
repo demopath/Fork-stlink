@@ -119,6 +119,10 @@ else ()
     set(SSP_LIB "")
 endif()
 
+# Threading support: pthreads on Unix, winpthread on MinGW, resolved by CMake.
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 CHECK_INCLUDE_FILE(sys/mman.h STLINK_HAVE_SYS_MMAN_H)
 if (STLINK_HAVE_SYS_MMAN_H)
     add_definitions(-DSTLINK_HAVE_SYS_MMAN_H)
@@ -285,9 +289,9 @@ set_target_properties(${STLINK_LIB_SHARED} PROPERTIES
 
 # Link shared library using modern imported target
 if (WIN32)
-    target_link_libraries(${STLINK_LIB_SHARED} libusb::libusb ${SSP_LIB} wsock32 ws2_32 pthread)
+    target_link_libraries(${STLINK_LIB_SHARED} libusb::libusb ${SSP_LIB} wsock32 ws2_32 Threads::Threads)
 else ()
-    target_link_libraries(${STLINK_LIB_SHARED} libusb::libusb ${SSP_LIB})
+    target_link_libraries(${STLINK_LIB_SHARED} libusb::libusb ${SSP_LIB} Threads::Threads)
 endif()
 
 # For MSVC:
@@ -333,9 +337,9 @@ set_target_properties(${STLINK_LIB_STATIC} PROPERTIES
 
 # Link static library using modern imported target
 if (WIN32)
-    target_link_libraries(${STLINK_LIB_STATIC} libusb::libusb ${SSP_LIB} wsock32 ws2_32 pthread)
+    target_link_libraries(${STLINK_LIB_STATIC} libusb::libusb ${SSP_LIB} wsock32 ws2_32 Threads::Threads)
 else ()
-    target_link_libraries(${STLINK_LIB_STATIC} libusb::libusb ${SSP_LIB})
+    target_link_libraries(${STLINK_LIB_STATIC} libusb::libusb ${SSP_LIB} Threads::Threads)
 endif()
 
 install(TARGETS ${STLINK_LIB_STATIC} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
