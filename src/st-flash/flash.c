@@ -1,7 +1,7 @@
 /*
  * File: flash.c
  *
- * Tool st-flash - Simple wrapper around the stlink_flash_write function
+ * Tool: st-flash
  */
 
 #include <stdint.h>

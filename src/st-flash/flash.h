@@ -1,7 +1,7 @@
 /*
  * File: flash.h
  *
- * Tool st-flash 
+ * Tool: st-flash 
  */
 
 #ifndef FLASH_H

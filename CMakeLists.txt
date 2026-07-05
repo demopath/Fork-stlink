@@ -372,7 +372,7 @@ set(ST-FLASH_SOURCES src/st-flash/flash.c src/st-flash/flash_opts.c)
 set(ST-INFO_SOURCES src/st-info/info.c)
 set(ST-UTIL_SOURCES src/st-util/gdb-remote.c src/st-util/gdb-server.c src/st-util/semihosting.c)
 set(ST-TRACE_SOURCES src/st-trace/trace.c)
-set(ST-SERVER_SOURCES src/st-server/st-server.c)
+set(ST-SERVER_SOURCES src/st-server/server.c)
 
 if (WIN32 OR MSVC)
     # Add getopt to sources

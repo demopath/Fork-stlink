@@ -1,5 +1,7 @@
 /*
- * File: st-server.c
+ * File: server.c
+ *
+ * Tool: st-server
  *
  * Serves a locally-attached ST-LINK over TCP so that st-flash / st-info on
  * another machine can drive it via --remote. The server forwards backend

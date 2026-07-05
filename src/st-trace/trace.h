@@ -1,7 +1,7 @@
 /*
  * File: trace.h
  *
- * Tool st-trace 
+ * Tool: st-trace 
  */
 
 #ifndef TRACE_H
