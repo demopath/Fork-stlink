@@ -1,8 +1,10 @@
 # Findlibusb.cmake
 # Modern CMake 3.20+ Find module for libusb-1.0
+#
 # Defines:
 #   - Imported Target: libusb::libusb
 #   - Variables: LIBUSB_FOUND, LIBUSB_INCLUDE_DIR, LIBUSB_LIBRARY
+#
 
 include(FetchContent)
 include(FindPackageHandleStandardArgs)
@@ -47,7 +49,7 @@ elseif(MINGW AND EXISTS "/etc/debian_version")
         message(STATUS "=== Building for Windows (x86-64) ===")
         set(ARCH 64)
     else ()
-        message(STATUS "=== Building for Windowsm (i686) ===")
+        message(STATUS "=== Building for Windows (i686) ===")
         set(ARCH 32)
     endif ()
 

@@ -378,7 +378,7 @@ set(ST-UTIL_SOURCES src/st-util/gdb-remote.c src/st-util/gdb-server.c src/st-uti
 set(ST-TRACE_SOURCES src/st-trace/trace.c)
 set(ST-SERVER_SOURCES src/st-server/st-server.c)
 
-if (MSVC)
+if (WIN32 OR MSVC)
     # Add getopt to sources
     include_directories(src/win32/getopt)
     set(ST-UTIL_SOURCES "${ST-UTIL_SOURCES};src/win32/getopt/getopt.c")
@@ -435,7 +435,7 @@ endif()
 
 # MCU configuration files
 if (WIN32)
-set(CMAKE_CHIPS_DIR ./config/chips)
+set(CMAKE_CHIPS_DIR ./config/chips) ### TODO: no absolute path (!)
 else ()
     set(CMAKE_CHIPS_DIR ${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}/config/chips)
 endif()

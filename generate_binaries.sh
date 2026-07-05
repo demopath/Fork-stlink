@@ -14,6 +14,7 @@ cd build-mingw-64
 cmake -DTOOLCHAIN_PREFIX=x86_64-w64-mingw32 \
       -DCMAKE_TOOLCHAIN_FILE=../cmake/modules/set_toolchain.cmake \
       -DCMAKE_SYSTEM_NAME=Windows \
+      -DCMAKE_C_FLAGS="-D_WIN32 -D_AMD64_" \
       -DSTLINK_GENERATE_GUI=OFF \
       ..
 make package
@@ -27,7 +28,7 @@ cd build-mingw-32
 cmake -DTOOLCHAIN_PREFIX=i686-w64-mingw32 \
       -DCMAKE_TOOLCHAIN_FILE=../cmake/modules/set_toolchain.cmake \
       -DCMAKE_SYSTEM_NAME=Windows \
-      
+      -DCMAKE_C_FLAGS="-D_WIN32" \
       -DSTLINK_GENERATE_GUI=OFF \
       ..
 make package
