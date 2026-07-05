@@ -285,7 +285,7 @@ set_target_properties(${STLINK_LIB_SHARED} PROPERTIES
 
 # Link shared library using modern imported target
 if (WIN32)
-    target_link_libraries(${STLINK_LIB_SHARED} libusb::libusb ${SSP_LIB} wsock32 ws2_32)
+    target_link_libraries(${STLINK_LIB_SHARED} libusb::libusb ${SSP_LIB} wsock32 ws2_32 pthread)
 else ()
     target_link_libraries(${STLINK_LIB_SHARED} libusb::libusb ${SSP_LIB})
 endif()
@@ -333,7 +333,7 @@ set_target_properties(${STLINK_LIB_STATIC} PROPERTIES
 
 # Link static library using modern imported target
 if (WIN32)
-    target_link_libraries(${STLINK_LIB_STATIC} libusb::libusb ${SSP_LIB} wsock32 ws2_32)
+    target_link_libraries(${STLINK_LIB_STATIC} libusb::libusb ${SSP_LIB} wsock32 ws2_32 pthread)
 else ()
     target_link_libraries(${STLINK_LIB_STATIC} libusb::libusb ${SSP_LIB})
 endif()
