@@ -4,7 +4,7 @@
 
 cmake_minimum_required(VERSION 3.20)
 
-# Enable modern install destination normalization (Fixes CMP0177 warning)
+# Enable modern install destination normalization (fixes CMP0177 warning)
 if(POLICY CMP0177)
     cmake_policy(SET CMP0177 NEW)
 endif()
@@ -101,7 +101,7 @@ endif()
 ###
 
 find_package(libusb REQUIRED)
-add_definitions(${LIBUSB_DEFINITIONS}) #only affects MSVC, For ssize-t
+add_definitions(${LIBUSB_DEFINITIONS}) #only affects MSVC, for ssize-t
 
 ## Check for system-specific additional header files and libraries
 
@@ -182,12 +182,12 @@ set(STLINK_HEADERS
         inc/stlink_cmd.h
         inc/stm32.h
         inc/stm32_flash.h
+        inc/libusb_settings.h
         src/stlink-lib/calculate.h
         src/stlink-lib/chipid.h
         src/stlink-lib/common_flash.h
         src/stlink-lib/flash_loader.h
         src/stlink-lib/helper.h
-        src/stlink-lib/libusb_settings.h
         src/stlink-lib/lib_md5.h
         src/stlink-lib/logging.h
         src/stlink-lib/logging_spdlog_wr.h

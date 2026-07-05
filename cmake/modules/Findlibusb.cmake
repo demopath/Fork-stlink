@@ -74,8 +74,8 @@ elseif(WIN32 OR MSVC OR MINGW)
 
         FetchContent_Declare(
             libusb
-            GIT_REPOSITORY "https://github.com"
-            GIT_TAG "v1.0.30-0"
+            GIT_REPOSITORY "https://github.com/libusb/libusb.git"
+            GIT_TAG "v1.0.30"
         )
         FetchContent_MakeAvailable(libusb)
 

@@ -1,5 +1,5 @@
 # set_toolchain.cmake
-# Toolchain file for cross-building on a Debian/Ubuntu Linux system
+# Toolchain file for cross-building for Windows on a Debian/Ubuntu Linux system
 
 ###
 # Set toolchain and configure target environment on the build host system

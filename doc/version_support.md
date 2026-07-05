@@ -33,6 +33,7 @@ Other Linux-/Unix-based Operating Systems:
 | CentOS Stream 9 [x64]    | 1.0.26 (`libusbx`)         | 3.**26.5** | 3.24.31     | May 2027               |
 | Mageia 9 [x64]           | 1.0.26                     | 3.**26.4** | 3.24.38     |                        |
 | Slackware 15 [x64]       | 1.0.**24**                 | 3.**24.1** | 3.24.31     |                        |
+| FreeBSD 13.x             | 1.0.**24**                 | 3.**22.1** | 3.24.x      | Jan 2026               |
 | NetBSD 9.x               | 1.0.**24**                 | 3.**21.2** | 3.24.30     |                        |
 
 
@@ -42,8 +43,6 @@ Systems with highlighted versions remain compatible with this toolset until furt
 
 | Operating System                         | libusb                     | cmake      | End of<br />OS-Support |
 | ---------------------------------------- | -------------------------- | ---------- | ---------------------- |
-| FreeBSD 13.x                             | 1.0.16-18 (API 0x01000102) | 3.**22.1** | Jan 2026               |
-| FreeBSD 12.x                             | 1.0.16-18 (API 0x01000102) | 3.**22.1** | Dec 2023               |
 | Alpine 3.15                              | 1.0.**24**                 | 3.**21.3** | Nov 2023               |
 | Fedora 35 [x64]                          | 1.0.**24**                 | 3.**21.3** | Dec 2022               |
 | Alpine 3.14                              | 1.0.**24**                 | 3.**20.3** | May 2023               |

@@ -8,9 +8,9 @@ This release drops support for some older operating systems. Check project READM
 
 Updated system requirements:
 - C-Standard: C17 (ISO/IEC 9899:2018)
-- `cmake` >= 3.18.3
+- `cmake` >= 3.20.0
 - `libusb` >= 1.0.24
-- `libgtk-dev` >= 3.24.30
+- `libgtk-3-dev` >= 3.24.30
 
 Features:
 
@@ -76,7 +76,7 @@ Fixes:
 
 Release date: 2024-02-01
 
-This release drops support for macOS and some older operating systems. Check project README for details.
+This release drops support for some older operating systems. Check project README for details.
 Removed Travis CI integration as it is no longer functional.
 
 Updated system requirements:
