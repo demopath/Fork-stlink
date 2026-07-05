@@ -334,11 +334,12 @@ static int32_t rb_read_unsupported_reg(stlink_t *sl, int32_t r_idx, struct stlin
 
 static int32_t rb_write_unsupported_reg(stlink_t *sl, uint32_t value, int32_t r_idx, struct stlink_reg *regp) {
     uint8_t p[REG_WIRE_LEN];
+    uint8_t rp[REG_WIRE_LEN];
     uint32_t pl;
     reg_to_wire(p, regp);
     int32_t ret = remote_rpc(sl, RPC_WRITE_UNSUPPORTED_REG, value, (uint32_t)r_idx,
-                             p, sizeof(p), p, sizeof(p), &pl);
-    if (ret == 0 && pl == REG_WIRE_LEN) { reg_from_wire(regp, p); }
+                             p, sizeof(p), rp, sizeof(rp), &pl);
+    if (ret == 0 && pl == REG_WIRE_LEN) { reg_from_wire(regp, rp); }
     else if (ret == 0) { ret = -1; }
     return (ret);
 }
