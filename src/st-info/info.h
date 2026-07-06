@@ -1,7 +1,7 @@
 /*
  * File: info.h
  *
- * Tool st-info 
+ * Tool: st-info 
  */
 
 #ifndef INFO_H

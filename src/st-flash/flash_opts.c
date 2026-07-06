@@ -1,6 +1,8 @@
 /*
  * File: flash_opts.c
  *
+ * Tool: st-flash
+ *
  * Flash Options
  */
 

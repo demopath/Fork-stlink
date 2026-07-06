@@ -1,3 +1,9 @@
+/*
+ * File: trace.c
+ *
+ * Tool: st-trace 
+ */
+
 #include <ctype.h>
 #include <getopt.h>
 #include <signal.h>

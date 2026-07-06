@@ -1,7 +1,7 @@
 /*
- * File: stinfo.c
+ * File: info.c
  *
- * Tool st-info 
+ * Tool: st-info 
  */
 
 #include <stdint.h>

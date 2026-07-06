@@ -1,3 +1,9 @@
+/*
+ * File: semihosting.c
+ *
+ * Tool: st-util
+ */
+
 #include <errno.h>
 #include <fcntl.h>
 #include <stdint.h>
