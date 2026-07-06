@@ -1,7 +1,10 @@
 /*
+ * Copyright (c) 2011 Peter Zotov <whitequark@whitequark.org>
+ * Use of this source code is governed by a BSD-style license that can be found in the LICENSE file.
+ *
  * File: gdb-remote.c
  *
- * Tool: st-util 
+ * Tool: st-util
  */
 
 #include <stdint.h>
