@@ -101,7 +101,6 @@ endif()
 ###
 
 find_package(libusb REQUIRED)
-find_package(Threads REQUIRED)
 
 add_definitions(${LIBUSB_DEFINITIONS}) # only affects WIN32 & MSVC, for ssize-t
 
