@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) 2026 James Walmsley <james@fullfat-fs.co.uk>
+ * Use of this source code is governed by a BSD-style license that can be found in the LICENSE file.
+ *
  * File: remote.h
  *
  * Remote backend: tunnels the stlink backend operations over TCP so that
