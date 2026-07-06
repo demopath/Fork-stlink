@@ -9,12 +9,13 @@
 #include <string.h>
 
 #include <stlink.h>
-#include "info.h"
 
 #include <chipid.h>
 #include <helper.h>
-#include <usb.h>
 #include <remote.h>
+#include <usb.h>
+
+#include "info.h"
 
 static void usage(void) {
     puts("st-info --version");

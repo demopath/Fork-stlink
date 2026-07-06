@@ -2,11 +2,10 @@
 #include <getopt.h>
 #include <signal.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -17,8 +16,8 @@
 #include <chipid.h>
 #include <logging.h>
 #include <read_write.h>
-#include <usb.h>
 #include <remote.h>
+#include <usb.h>
 
 #define DEFAULT_LOGGING_LEVEL 50
 #define DEBUG_LOGGING_LEVEL 100

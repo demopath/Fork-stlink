@@ -3,16 +3,15 @@
  * Use of this source code is governed by a BSD-style license that can be found in the LICENSE file.
  */
 
-#include <stdio.h>
-#include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #if defined(_WIN32)
 #include <win32_socket.h>
 #else
-#include <unistd.h>
 #include <poll.h>
+#include <unistd.h>
 #endif // _WIN32
 
 #include "gdb-remote.h"
