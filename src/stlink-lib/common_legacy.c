@@ -720,7 +720,7 @@ int32_t stlink_parse_ihex(const char *path, uint8_t erased_pattern, uint8_t **me
     // parse file two times - first to find memory range, second - to fill it
     if(scan == 1) {
       if(!eof_found) {
-        ELOG("No EoF recond\n");
+        ELOG("No EoF record\n");
         res = -1;
         break;
       }
@@ -1162,9 +1162,9 @@ int32_t stlink_fread(stlink_t *sl, const char *path, bool is_ihex, stm32_addr_t 
   } else {
     struct stlink_fread_worker_arg arg = {fd};
     error = stlink_read(sl, addr, size, &stlink_fread_worker, &arg);
+    close(fd);
   }
 
-  close(fd);
   return (error);
 }
 
@@ -1398,7 +1398,9 @@ int32_t stlink_load_device_params(stlink_t *sl) {
 
   sl->flash_type = params->flash_type;
   sl->flash_pgsz = params->flash_pagesize;
-  sl->sram_size = params->sram_size;
+  if(params->flash_type != STM32_FLASH_TYPE_WB0) {
+    sl->sram_size = params->sram_size;
+  }
   sl->sys_base = params->bootrom_base;
   sl->sys_size = params->bootrom_size;
   sl->option_base = params->option_base;

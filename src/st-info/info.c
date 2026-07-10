@@ -1,5 +1,5 @@
 /*
- * File: stinfo.c
+ * File: info.c
  *
  * Tool st-info 
  */
