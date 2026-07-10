@@ -1,23 +1,23 @@
 /*
  * File: semihosting.c
  *
- * Tool: st-util 
+ * Tool: st-util
  */
-
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include <errno.h>
 #include <fcntl.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <stlink.h>
-#include "semihosting.h"
 
 #include <logging.h>
 #include <read_write.h>
+
+#include "semihosting.h"
 
 static int32_t mem_read_u8(stlink_t *sl, uint32_t addr, uint8_t *data) {
     int32_t offset = addr % 4;

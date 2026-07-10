@@ -4,7 +4,7 @@
 
 cmake_minimum_required(VERSION 3.20)
 
-# Enable modern install destination normalization (Fixes CMP0177 warning)
+# Enable modern install destination normalization (fixes CMP0177 warning)
 if(POLICY CMP0177)
     cmake_policy(SET CMP0177 NEW)
 endif()
@@ -101,7 +101,6 @@ endif()
 ###
 
 find_package(libusb REQUIRED)
-find_package(Threads REQUIRED)
 
 add_definitions(${LIBUSB_DEFINITIONS}) # only affects WIN32 & MSVC, for ssize-t
 
@@ -121,6 +120,10 @@ if (_stack_chk_fail_exists)
 else ()
     set(SSP_LIB "")
 endif()
+
+# Threading support: pthreads on Unix, winpthread on MinGW, resolved by CMake.
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
 
 CHECK_INCLUDE_FILE(sys/mman.h STLINK_HAVE_SYS_MMAN_H)
 if (STLINK_HAVE_SYS_MMAN_H)
@@ -185,12 +188,12 @@ set(STLINK_HEADERS
         inc/stlink_cmd.h
         inc/stm32.h
         inc/stm32_flash.h
+        inc/libusb_settings.h
         src/stlink-lib/calculate.h
         src/stlink-lib/chipid.h
         src/stlink-lib/common_flash.h
         src/stlink-lib/flash_loader.h
         src/stlink-lib/helper.h
-        src/stlink-lib/libusb_settings.h
         src/stlink-lib/lib_md5.h
         src/stlink-lib/logging.h
         src/stlink-lib/logging_spdlog_wr.h

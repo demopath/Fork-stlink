@@ -1,20 +1,22 @@
 /*
+ * Copyright (c) 2011 Peter Zotov <whitequark@whitequark.org>
+ * Use of this source code is governed by a BSD-style license that can be found in the LICENSE file.
+ *
  * File: gdb-remote.c
  *
- * Tool: st-util 
+ * Tool: st-util
  */
 
-#include <stdio.h>
-#include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #if defined(_WIN32)
 #include <win32_socket.h>
 #include <windows.h>
 #else
-#include <unistd.h>
 #include <poll.h>
+#include <unistd.h>
 #endif // _WIN32
 
 #include "gdb-remote.h"

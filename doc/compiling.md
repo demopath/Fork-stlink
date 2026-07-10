@@ -7,7 +7,6 @@
 On Windows users should ensure that the following software is installed:
 
 - `git` (Required for building LibUSB if missing)
-- `7zip` (_optional_)
 - `cmake`
 - `MSVC` Compiler (Tested with Visual Studio 2022 and Build Tools for Visual Studio 2022)
 
@@ -49,18 +48,14 @@ On Windows users should ensure that the following software is installed:
 Install the following packages from your package repository:
 
 - `git`
-- `gcc` or `clang` or `mingw32-gcc` or `mingw64-gcc` (C-compiler; very likely gcc is already present)
-- `build-essential` (on Debian based distros (Debian, Ubuntu))
-- `cmake`
-- `rpm` (on Debian based distros (Debian, Ubuntu), needed for package build with `make package`)
-- `libusb-1.0-0`
-- `libusb-1.0-0-dev` (development headers for building)
+- `gcc` and `g++` or `clang` (C-compiler)
+- `make` (Build tool)
+- `build-essential` (_recommended_, on Debian based distros, contains `gcc`, `g++`, `libc6-dev`, `make`)
+- `cmake` (Software development tool)
+- `libusb-1.0-0` and `libusb-1.0-0-dev` (libusb and related development headers)
 - `libgtk-3-dev` (_optional_, needed for `stlink-gui`)
+- `rpm` (on Debian based distros, needed for package build with `make package`)
 - `pandoc` (_optional_, needed for generating manpages from markdown)
-
-or execute (Debian-based systems only): `apt-get install gcc build-essential cmake rpm libusb-1.0-0 libusb-1.0-0-dev libgtk-3-dev pandoc`
-
-(Replace gcc with the intended C-compiler if necessary or leave out any optional package not needed.)
 
 ### Installation
 
@@ -93,10 +88,7 @@ As an option you may also install to an individual user-defined folder e.g `$HOM
 
 Install the following packages from your package repository:
 
-- `mingw-w64`
-- `mingw-w64-common`
-- `mingw-w64-i686-dev`
-- `mingw-w64-x86-64-dev`
+- `mingw-w64`, `autobuild` and `libtool`
 
 After following the steps for installation above, proceed with from the build dircetory itself:
 
