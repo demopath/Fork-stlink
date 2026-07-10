@@ -1,10 +1,5 @@
 /*
- * Copyright (c) 2026 James Walmsley <james@fullfat-fs.co.uk>
- * Use of this source code is governed by a BSD-style license that can be found in the LICENSE file.
- *
  * File: server.c
- *
- * Tool: st-server
  *
  * Serves a locally-attached ST-LINK over TCP so that st-flash / st-info on
  * another machine can drive it via --remote. The server forwards backend
