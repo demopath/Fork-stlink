@@ -88,7 +88,7 @@ As an option you may also install to an individual user-defined folder e.g `$HOM
 
 Install the following packages from your package repository:
 
-- `mingw-w64`, `autobuild` and `libtool`
+- `mingw-w64`, `autotools` and `libtool`
 
 After following the steps for installation above, proceed with from the build dircetory itself:
 

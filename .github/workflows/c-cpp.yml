@@ -217,8 +217,8 @@ jobs:
       - name: Install MinGW toolchain and dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-mingw-w64 cmake autobuild libtool libusb-1.0-0-dev
+          sudo apt-get install -y gcc-mingw-w64 cmake autotools-dev libtool libusb-1.0-0-dev
 
       - name: Cross-compile for Windows
         run: |
-          sudo sh ./generate_binaries.sh
+          sudo sh ./gen_binaries_win.sh
