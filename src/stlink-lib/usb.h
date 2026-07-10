@@ -7,10 +7,34 @@
 #ifndef USB_H
 #define USB_H
 
+#if !defined(_MSC_VER)
+#include <sys/time.h>
+#endif // _MSC_VER
+
+#if defined(_WIN32)
+#include <win32/win32_socket.h>
+#include <windows.h>
+#endif // _WIN32
+
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <errno.h>
+#include <limits.h>
+#include <stdbool.h>
+#include <unistd.h>
+#include <pthread.h>
+
+#include <stlink.h>
+#include <stlink_backend.h>
+#include <stlink_cmd.h>
+#include <stm32_register.h>
 
 #include "libusb_settings.h"
 #include "logging.h"
+
 
 #define STLINK_USB_VID_ST                   0x0483
 #define STLINK_USB_PID_STLINK               0x3744

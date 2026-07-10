@@ -317,4 +317,4 @@ int32_t usleep(uint32_t waitTime) {
 }
 #endif
 
-#endif // defined(_WIN32)
+#endif // _WIN32

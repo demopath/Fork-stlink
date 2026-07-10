@@ -11,11 +11,16 @@
 #define O_BINARY 0
 #endif // O_BINARY
 
-#ifdef STLINK_HAVE_SYS_MMAN_H
-#include <sys/mman.h>
-#else
-#include <mmap.h>
-#endif // STLINK_HAVE_SYS_MMAN_H
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+
+#include <stlink.h>
+#include <win32/mmap.h>
 
 /* Memory mapped file */
 typedef struct mapped_file {

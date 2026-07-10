@@ -101,7 +101,7 @@ Install the following packages from your package repository:
 After following the steps for installation above, proceed with from the build dircetory itself:
 
 ```sh
-$ sudo sh ./cmake/packaging/windows/generate_binaries.sh
+$ sudo sh ./gen_binaries_win.sh
 ```
 
 The generated zip-packages can be found in the subdirectory `./build/dist`.

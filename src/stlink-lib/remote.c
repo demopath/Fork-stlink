@@ -18,32 +18,11 @@
  * probe; the server applies the supplied ap before each operation.
  */
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-
-#if defined(_WIN32)
-#include <win32_socket.h>
-#include <windows.h>
-#else
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <sys/select.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#endif
-
-#include <stlink.h>
-#include <stlink_backend.h>
-
 #include "remote.h"
+
 #include "read_write.h"
 #include "logging.h"
+
 
 #define REQ_HDR_LEN 20
 #define REP_HDR_LEN 12

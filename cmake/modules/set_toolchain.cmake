@@ -21,8 +21,8 @@ set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
 # Set target system name
-set(CMAKE_SYSTEM_NAME WINDOWS)
+set(CMAKE_SYSTEM_NAME Windows)
 
-# Windows-API-Header einbinden
+# Optimise Windows-API header file includes
 add_compile_options(-DWIN32_LEAN_AND_MEAN)
-add_compile_options(-D_WIN32_WINNT=0x0601)
+add_compile_options(-D_WIN32_WINNT=0x0A00) # Windows 10+

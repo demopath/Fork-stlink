@@ -7,6 +7,14 @@
 #ifndef COMMON_FLASH_H
 #define COMMON_FLASH_H
 
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+
+#include <stlink.h>
+
+
 #define BANK_1 0
 #define BANK_2 1
 

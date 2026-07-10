@@ -9,6 +9,10 @@
 #define LOGGING_H
 
 #include <stdint.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <time.h>
+
 #include "logging_spdlog_wr.h"
 
 #ifdef  __cplusplus

@@ -1,10 +1,6 @@
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
 
 #include "mmap.h"
+
 
 void *mmap (void *addr, uint32_t len, int32_t prot, int32_t flags, int32_t fd, int64_t offset) {
     void *buf;

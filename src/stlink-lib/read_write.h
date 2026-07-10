@@ -7,6 +7,14 @@
 #ifndef READ_WRITE_H
 #define READ_WRITE_H
 
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#include <stlink.h>
+#include <stlink_backend.h>
+
+
 uint16_t read_uint16(const unsigned char *c, const int32_t pt);
 void write_uint16(unsigned char *buf, uint16_t ui);
 uint32_t read_uint32(const unsigned char *c, const int32_t pt);

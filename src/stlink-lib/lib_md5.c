@@ -5,11 +5,8 @@
  * This is free and unencumbered software released into the public domain - June 2013 - waterjuice.org
  */
 
-#include <stdint.h>
-#include <stdio.h>
-#include <memory.h>
-
 #include "lib_md5.h"
+
 
 /* INTERNAL FUNCTIONS */
 

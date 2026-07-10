@@ -197,7 +197,6 @@ set(STLINK_HEADERS
         src/stlink-lib/map_file.h
         src/stlink-lib/md5.h
         src/stlink-lib/option_bytes.h
-        src/stlink-lib/programmer.h
         src/stlink-lib/read_write.h
         src/stlink-lib/remote.h
         src/stlink-lib/sg_legacy.h
@@ -216,7 +215,6 @@ set(STLINK_SOURCE
         src/stlink-lib/map_file.c
         src/stlink-lib/md5.c
         src/stlink-lib/option_bytes.c
-        src/stlink-lib/programmer.c
         src/stlink-lib/read_write.c
         src/stlink-lib/remote.c
         src/stlink-lib/sg_legacy.c
@@ -231,7 +229,7 @@ if (WIN32)
     if (MSVC)
         # Add drop-in replacement for unistd.h to sources
         include_directories(src/win32/unistd)
-        set(STLINK_HEADERS "${STLINK_HEADERS};src/win32/unistd/unistd.h")
+        set(STLINK_HEADERS "${STLINK_HEADERS};src/win32/unistd.h")
     endif()
 
     if (NOT STLINK_HAVE_SYS_MMAN_H)

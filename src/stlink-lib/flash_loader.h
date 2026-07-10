@@ -7,6 +7,16 @@
 #ifndef FLASH_LOADER_H
 #define FLASH_LOADER_H
 
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+
+#include <stm32.h>
+#include <stm32_register.h>
+#include <stlink.h>
+
+
 int32_t stlink_flash_loader_init(stlink_t *sl, flash_loader_t* fl);
 // static int32_t loader_v_dependent_assignment(stlink_t *sl,
 //                                             const uint8_t **loader_code, uint32_t *loader_size,

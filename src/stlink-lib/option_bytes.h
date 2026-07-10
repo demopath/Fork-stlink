@@ -7,6 +7,13 @@
 #ifndef OPTION_BYTES_H
 #define OPTION_BYTES_H
 
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#include <stlink.h>
+
+
 int32_t stlink_read_option_control_register_f0(stlink_t *sl, uint32_t *option_byte);
 // static int32_t stlink_write_option_bytes_f0(stlink_t *sl, stm32_addr_t addr, uint8_t* base, uint32_t len);
 // static int32_t stlink_write_option_control_register_f0(stlink_t *sl, uint32_t option_cr);

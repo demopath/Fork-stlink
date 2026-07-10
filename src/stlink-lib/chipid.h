@@ -7,6 +7,15 @@
 #ifndef CHIPID_H
 #define CHIPID_H
 
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <stm32.h>
+#include <stlink.h>
+
+
 /* Chipid parametres */
 struct stlink_chipid_params {
     char *dev_type;

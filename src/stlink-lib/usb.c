@@ -4,35 +4,11 @@
  * USB commands & interaction with ST-LINK devices
  */
 
-#if !defined(_MSC_VER)
-#include <sys/time.h>
-#endif // _MSC_VER
-
-#if defined(_WIN32)
-#include <win32_socket.h>
-#endif // _WIN32
-
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <errno.h>
-#include <limits.h>
-#include <stdbool.h>
-#include <unistd.h>
-
-#include <stlink.h>
-#include <stlink_backend.h>
-#include <stlink_cmd.h>
-#include <stm32_register.h>
+#include "usb.h"
 
 #include "logging.h"
 #include "read_write.h"
-#include "usb.h"
 
-#include <unistd.h>
-#include <pthread.h>
 
 static inline uint32_t le_to_h_u32(const uint8_t* buf) {
     return ((uint32_t) ((uint32_t) buf[0] | (uint32_t) buf[1] << 8 | (uint32_t) buf[2] << 16 | (uint32_t) buf[3] << 24));

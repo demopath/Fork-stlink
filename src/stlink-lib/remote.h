@@ -12,7 +12,28 @@
 #define REMOTE_H
 
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+
+#if defined(_WIN32)
+#include <win32/win32_socket.h>
+#include <windows.h>
+#else
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/socket.h>
+#include <sys/select.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#endif // _WIN32
+
 #include <stlink.h>
+#include <stlink_backend.h>
+
 
 #define STLINK_REMOTE_DEFAULT_PORT 4500
 #define STLINK_REMOTE_MAGIC        0x4b4c5453 /* "STLK" */
