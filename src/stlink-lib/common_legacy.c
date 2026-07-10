@@ -13,8 +13,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-// #include <sys/stat.h>  // TODO: Check use
-// #include <sys/types.h> // TODO: Check use
 
 #include <stlink.h>
 #include <stlink_backend.h>
@@ -29,6 +27,7 @@
 #include "md5.h"
 #include "read_write.h"
 #include "usb.h"
+
 
 #ifndef O_BINARY
 #define O_BINARY 0

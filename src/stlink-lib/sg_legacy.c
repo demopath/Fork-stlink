@@ -84,23 +84,12 @@
 
 #define __USE_GNU
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-// #include <sys/types.h> // TODO: Check use
-
-#include <stlink.h>
-#include <stlink_backend.h>
-#include <stlink_cmd.h>
-#include <stm32_register.h>
-
 #include "sg_legacy.h"
+
 #include "logging.h"
 #include "read_write.h"
 #include "usb.h"
-// #include <stlink.h>    // TODO: Check use
+
 
 #define STLINK_OK    0x80
 #define STLINK_FALSE 0x81
