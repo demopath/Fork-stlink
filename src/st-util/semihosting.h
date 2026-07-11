@@ -7,9 +7,19 @@
 #ifndef SEMIHOSTING_H
 #define SEMIHOSTING_H
 
+#include <errno.h>
+#include <fcntl.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #include <stlink.h>
+
+#include <logging.h>
+#include <read_write.h>
+
 
 #define SEMIHOST_SYS_OPEN     0x01
 #define SEMIHOST_SYS_CLOSE    0x02

@@ -7,46 +7,11 @@
  * Tool: st-util
  */
 
-#include <ctype.h>
-#include <getopt.h>
-#include <signal.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-
-#if defined(_MSC_VER)
-#include <stdbool.h>
-#define __attribute__(x)
-#endif
-
-#if defined(_WIN32)
-#include <win32_socket.h>
-#include <windows.h>
-#else
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#endif // _WIN32
-
-#include <stlink.h>
-#include <stm32_register.h>
-
-#include <chipid.h>
-#include <common_flash.h>
-#include <flash_loader.h>
-#include <helper.h>
-#include <logging.h>
-#include <read_write.h>
-#include <remote.h>
-#include <usb.h>
-
-#include "gdb-remote.h"
 #include "gdb-server.h"
+#include "gdb-remote.h"
 #include "memory-map.h"
 #include "semihosting.h"
+
 
 #define FLASH_BASE 0x08000000
 

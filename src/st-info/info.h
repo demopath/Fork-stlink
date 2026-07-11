@@ -7,6 +7,18 @@
 #ifndef INFO_H
 #define INFO_H
 
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#include <stlink.h>
+
+#include <chipid.h>
+#include <helper.h>
+#include <remote.h>
+#include <usb.h>
+
+
 // static void usage(void);
 // static void stlink_print_version(stlink_t *sl);
 // static void stlink_print_info(stlink_t *sl);

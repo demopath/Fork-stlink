@@ -9,6 +9,17 @@
 #ifndef FLASH_OPTS_H
 #define FLASH_OPTS_H
 
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <stlink.h>
+#include <stm32.h>
+
+#include <helper.h>
+
+
 #define FLASH_OPTS_INITIALIZER {0, { 0 }, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL}
 
 enum flash_cmd {FLASH_CMD_NONE = 0,

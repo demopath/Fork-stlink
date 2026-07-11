@@ -233,16 +233,13 @@ set(STLINK_SOURCE
         src/stlink-lib/usb.c
         )
 
+## Windows-specific source- and headerfiles for stlink library
 if (WIN32)
     include_directories(src/win32)
     set(STLINK_SOURCE "${STLINK_SOURCE};src/win32/win32_socket.c")
     set(STLINK_HEADERS "${STLINK_HEADERS};src/win32/win32_socket.h")
 
-    if (MSVC)
-        # Add drop-in replacement for unistd.h to sources
-        include_directories(src/win32/unistd)
-        set(STLINK_HEADERS "${STLINK_HEADERS};src/win32/unistd.h")
-    endif()
+
 
     if (NOT STLINK_HAVE_SYS_MMAN_H)
         include_directories(src/win32/mmap)
@@ -253,6 +250,12 @@ if (WIN32)
     if (NOT STLINK_HAVE_SYS_TIME_H)
         set(STLINK_SOURCE "${STLINK_SOURCE};src/win32/sys_time.c")
         set(STLINK_HEADERS "${STLINK_HEADERS};src/win32/sys_time.h")
+    endif()
+
+    if (MSVC)
+        # Add drop-in replacement for unistd.h to sources
+        include_directories(src/win32/unistd)
+        set(STLINK_HEADERS "${STLINK_HEADERS};src/win32/unistd.h")
     endif()
 endif()
 

@@ -7,19 +7,8 @@
  * Tool: st-util
  */
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-
-#if defined(_WIN32)
-#include <win32_socket.h>
-#include <windows.h>
-#else
-#include <poll.h>
-#include <unistd.h>
-#endif // _WIN32
-
 #include "gdb-remote.h"
+
 
 static const char hex[] = "0123456789abcdef";
 
