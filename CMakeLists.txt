@@ -100,16 +100,26 @@ endif()
 # Dependencies
 ###
 
+### libusb ###
+
 find_package(libusb REQUIRED)
 
 add_definitions(${LIBUSB_DEFINITIONS}) # only affects WIN32 & MSVC, for ssize-t
 
-## Check for system-specific additional header files and libraries
 
+# Check for system-specific additional header files and libraries
 include(CheckIncludeFile)
 include(CheckLibraryExists)
 
-# Stack Smashing Protection Library
+# Additional fixes for MSVC
+if (MSVC)
+    # Use string.h rather than strings.h and disable annoying warnings
+    add_definitions(-DHAVE_STRING_H -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS /wd4710)
+endif()
+
+
+### Stack Smashing Protection Library (SSP) ###
+
 CHECK_LIBRARY_EXISTS(ssp __stack_chk_fail "" _stack_chk_fail_exists)
 if (_stack_chk_fail_exists)
     if (WIN32)
@@ -120,6 +130,8 @@ if (_stack_chk_fail_exists)
 else ()
     set(SSP_LIB "")
 endif()
+
+# ================================================================================
 
 # Threading support: pthreads on Unix, winpthread on MinGW, resolved by CMake.
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -147,10 +159,7 @@ if (NOT WIN32) # Use GetModuleFileNameA and FindFirstFileA on Windows
     endif()
 endif()
 
-if (MSVC)
-    # Use string.h rather than strings.h and disable annoying warnings
-    add_definitions(-DHAVE_STRING_H -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS /wd4710)
-endif()
+# ================================================================================
 
 
 ###
