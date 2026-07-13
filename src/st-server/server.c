@@ -6,27 +6,27 @@
  * operations; target-specific logic runs on the client.
  */
 
+#include <errno.h>
+#include <getopt.h>
 #include <signal.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 
 #if defined(_WIN32)
-#include <win32_socket.h>
+#include <windows.h>
 #else
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
-#include <getopt.h>
-#endif
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#endif // _WIN32
 
 #include <stlink.h>
 
-#include "remote.h"
-#include "logging.h"
+#include <logging.h>
+#include <remote.h>
 
 static volatile sig_atomic_t stop_requested = 0;
 

@@ -100,24 +100,42 @@ endif()
 # Dependencies
 ###
 
+### libusb ###
+
 find_package(libusb REQUIRED)
-add_definitions(${LIBUSB_DEFINITIONS}) #only affects MSVC, for ssize-t
 
-## Check for system-specific additional header files and libraries
+add_definitions(${LIBUSB_DEFINITIONS}) # only affects WIN32 & MSVC, for ssize-t
 
+
+# Check for system-specific additional header files and libraries
 include(CheckIncludeFile)
 include(CheckLibraryExists)
+
+# Additional fixes for MSVC
+if (MSVC)
+    # Use string.h rather than strings.h and disable annoying warnings
+    add_definitions(-DHAVE_STRING_H -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS /wd4710)
+endif()
+
+
+### Stack Smashing Protection Library (SSP) ###
 
 CHECK_LIBRARY_EXISTS(ssp __stack_chk_fail "" _stack_chk_fail_exists)
 if (_stack_chk_fail_exists)
     if (WIN32)
-        set(SSP_LIB -static ssp)
+        set(SSP_LIB -static ssp) # static linking
     else ()
         set(SSP_LIB ssp)
     endif()
 else ()
     set(SSP_LIB "")
 endif()
+
+# ================================================================================
+
+# Threading support: pthreads on Unix, winpthread on MinGW, resolved by CMake.
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
 
 CHECK_INCLUDE_FILE(sys/mman.h STLINK_HAVE_SYS_MMAN_H)
 if (STLINK_HAVE_SYS_MMAN_H)
@@ -141,10 +159,7 @@ if (NOT WIN32) # Use GetModuleFileNameA and FindFirstFileA on Windows
     endif()
 endif()
 
-if (MSVC)
-    # Use string.h rather than strings.h and disable annoying warnings
-    add_definitions(-DHAVE_STRING_H -D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_WARNINGS /wd4710)
-endif()
+# ================================================================================
 
 
 ###
@@ -194,7 +209,6 @@ set(STLINK_HEADERS
         src/stlink-lib/map_file.h
         src/stlink-lib/md5.h
         src/stlink-lib/option_bytes.h
-        src/stlink-lib/programmer.h
         src/stlink-lib/read_write.h
         src/stlink-lib/remote.h
         src/stlink-lib/sg_legacy.h
@@ -213,23 +227,29 @@ set(STLINK_SOURCE
         src/stlink-lib/map_file.c
         src/stlink-lib/md5.c
         src/stlink-lib/option_bytes.c
-        src/stlink-lib/programmer.c
         src/stlink-lib/read_write.c
         src/stlink-lib/remote.c
         src/stlink-lib/sg_legacy.c
         src/stlink-lib/usb.c
         )
 
+## Windows-specific build configuration
 if (WIN32)
-    include_directories(src/win32)
-    set(STLINK_SOURCE "${STLINK_SOURCE};src/win32/win32_socket.c")
-    set(STLINK_HEADERS "${STLINK_HEADERS};src/win32/win32_socket.h")
+    message(STATUS "Configuring for Windows (Windows 10+)")
 
-    if (MSVC)
-        # Add drop-in replacement for unistd.h to sources
-        include_directories(src/win32/unistd)
-        set(STLINK_HEADERS "${STLINK_HEADERS};src/win32/unistd/unistd.h")
-    endif()
+    # Compiler definitions for Windows
+    add_definitions(
+        -D_WIN32_WINNT=0x0A00   # Minimum system requirement: Windows 10
+        -D_WIN32=1              # Define _WIN32 for platform specific code
+    )
+
+    link_libraries(ws2_32)      # Link Windows-Socket library
+
+    # Add Windows-specific source- and headerfiles
+    list(APPEND STLINK_SOURCE  src/win32/win32_socket.c)
+    list(APPEND STLINK_HEADERS src/win32/win32_socket.h)
+
+
 
     if (NOT STLINK_HAVE_SYS_MMAN_H)
         include_directories(src/win32/mmap)
@@ -240,6 +260,12 @@ if (WIN32)
     if (NOT STLINK_HAVE_SYS_TIME_H)
         set(STLINK_SOURCE "${STLINK_SOURCE};src/win32/sys_time.c")
         set(STLINK_HEADERS "${STLINK_HEADERS};src/win32/sys_time.h")
+    endif()
+
+    if (MSVC)
+        # Add drop-in replacement for unistd.h to sources
+        include_directories(src/win32/unistd)
+        set(STLINK_HEADERS "${STLINK_HEADERS};src/win32/unistd.h")
     endif()
 endif()
 
@@ -278,16 +304,26 @@ set_target_properties(${STLINK_LIB_SHARED} PROPERTIES
 
 # Since we're not using __declspec(dllexport), WINDOWS_EXPORT_ALL_SYMBOLS is mandatory for MSVC.
 # This call will only affect MSVC, compilers/OSes ignore it.
-# TODO: Use dllexport on the desired functions
+
 set_target_properties(${STLINK_LIB_SHARED} PROPERTIES
         WINDOWS_EXPORT_ALL_SYMBOLS ON
 )
 
 # Link shared library using modern imported target
 if (WIN32)
-    target_link_libraries(${STLINK_LIB_SHARED} libusb::libusb ${SSP_LIB} wsock32 ws2_32)
+    target_link_libraries(${STLINK_LIB_SHARED} 
+        libusb::libusb
+        Threads::Threads
+        ${SSP_LIB}
+        wsock32
+        ws2_32
+    )
 else ()
-    target_link_libraries(${STLINK_LIB_SHARED} libusb::libusb ${SSP_LIB})
+    target_link_libraries(${STLINK_LIB_SHARED}
+        libusb::libusb
+        Threads::Threads
+        ${SSP_LIB}
+    )
 endif()
 
 # For MSVC:
@@ -333,9 +369,19 @@ set_target_properties(${STLINK_LIB_STATIC} PROPERTIES
 
 # Link static library using modern imported target
 if (WIN32)
-    target_link_libraries(${STLINK_LIB_STATIC} libusb::libusb ${SSP_LIB} wsock32 ws2_32)
+    target_link_libraries(${STLINK_LIB_STATIC}
+        libusb::libusb
+        Threads::Threads
+        ${SSP_LIB}
+        wsock32
+        ws2_32
+    )
 else ()
-    target_link_libraries(${STLINK_LIB_STATIC} libusb::libusb ${SSP_LIB})
+    target_link_libraries(${STLINK_LIB_STATIC}
+        libusb::libusb
+        Threads::Threads
+        ${SSP_LIB}
+    )
 endif()
 
 install(TARGETS ${STLINK_LIB_STATIC} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
@@ -351,7 +397,7 @@ set(ST-UTIL_SOURCES src/st-util/gdb-remote.c src/st-util/gdb-server.c src/st-uti
 set(ST-TRACE_SOURCES src/st-trace/trace.c)
 set(ST-SERVER_SOURCES src/st-server/server.c)
 
-if (MSVC)
+if (WIN32 OR MSVC)
     # Add getopt to sources
     include_directories(src/win32/getopt)
     set(ST-UTIL_SOURCES "${ST-UTIL_SOURCES};src/win32/getopt/getopt.c")
@@ -408,7 +454,7 @@ endif()
 
 # MCU configuration files
 if (WIN32)
-set(CMAKE_CHIPS_DIR ./config/chips)
+set(CMAKE_CHIPS_DIR ./config/chips) ### TODO: no absolute path (!)
 else ()
     set(CMAKE_CHIPS_DIR ${CMAKE_INSTALL_FULL_DATADIR}/${PROJECT_NAME}/config/chips)
 endif()

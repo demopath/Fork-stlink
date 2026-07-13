@@ -7,13 +7,8 @@
 
 #define __STDC_WANT_LIB_EXT1__ 1
 
-#include <stdint.h>
-#include <stdio.h>
-
-#include <stdarg.h>
-#include <time.h>
-
 #include "logging.h"
+
 
 static int32_t max_level = UDEBUG;
 

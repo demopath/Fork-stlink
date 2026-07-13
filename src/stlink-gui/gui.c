@@ -1,16 +1,18 @@
+#include <errno.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
+
 #include <gtk/gtk.h>
 
 #include <stlink.h>
-#include "gui.h"
 
 #include <chipid.h>
 #include <common_flash.h>
 #include <read_write.h>
 #include <usb.h>
+
+#include "gui.h"
 
 #define MEM_READ_SIZE 1024
 

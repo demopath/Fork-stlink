@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) 2026 James Walmsley <james@fullfat-fs.co.uk>
+ * Use of this source code is governed by a BSD-style license that can be found in the LICENSE file.
+ *
  * File: remote.h
  *
  * Remote backend: tunnels the stlink backend operations over TCP so that
@@ -12,7 +15,27 @@
 #define REMOTE_H
 
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+
+#if defined(_WIN32)
+#include <windows.h>
+#else
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/socket.h>
+#include <sys/select.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#endif // _WIN32
+
 #include <stlink.h>
+#include <stlink_backend.h>
+
 
 #define STLINK_REMOTE_DEFAULT_PORT 4500
 #define STLINK_REMOTE_MAGIC        0x4b4c5453 /* "STLK" */
@@ -47,8 +70,8 @@ enum stlink_remote_op {
     RPC_RESET,
     RPC_JTAG_RESET,
     RPC_RUN,
-    RPC_STATUS,
-    RPC_VERSION,
+    RPC_STATUS_REMOTE,
+    RPC_VERSION_REMOTE,
     RPC_READ_DEBUG32,
     RPC_READ_MEM32,
     RPC_WRITE_DEBUG32,
