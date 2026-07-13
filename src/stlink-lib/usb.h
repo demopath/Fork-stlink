@@ -12,7 +12,6 @@
 #endif // _MSC_VER
 
 #if defined(_WIN32)
-#include <win32/win32_socket.h>
 #include <windows.h>
 #endif // _WIN32
 

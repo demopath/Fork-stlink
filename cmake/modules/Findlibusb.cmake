@@ -64,7 +64,7 @@ elseif(MINGW AND EXISTS "/etc/debian_version")
         )
         FetchContent_MakeAvailable(libusb)
 
-        # a) bootstrap.sh ausführen (falls vorhanden)
+        # Run bootstrap.sh (if available)
         if(EXISTS "${libusb_SOURCE_DIR}/bootstrap.sh")
             execute_process(
                 COMMAND ./bootstrap.sh
@@ -94,7 +94,7 @@ elseif(MINGW AND EXISTS "/etc/debian_version")
         set(LIBUSB_INCLUDE_DIR "${libusb_SOURCE_DIR}/libusb")
         set(LIBUSB_LIBRARY "${libusb_SOURCE_DIR}/../libusb-build/install/lib/libusb-1.0.a")
 
-        # --- Target für moderne CMake-Nutzung ---
+        # Create a CMake target
         if(NOT TARGET libusb::libusb)
             add_library(libusb::libusb UNKNOWN IMPORTED GLOBAL)
             set_target_properties(libusb::libusb PROPERTIES
@@ -124,7 +124,7 @@ elseif(MINGW AND EXISTS "/etc/debian_version")
         )
         FetchContent_MakeAvailable(libusb)
 
-        # a) bootstrap.sh ausführen (falls vorhanden)
+        # Run bootstrap.sh (if available)
         if(EXISTS "${libusb_SOURCE_DIR}/bootstrap.sh")
             execute_process(
                 COMMAND ./bootstrap.sh
@@ -154,7 +154,7 @@ elseif(MINGW AND EXISTS "/etc/debian_version")
         set(LIBUSB_INCLUDE_DIR "${libusb_SOURCE_DIR}/libusb")
         set(LIBUSB_LIBRARY "${libusb_SOURCE_DIR}/../libusb-build/install/lib/libusb-1.0.a")
 
-        # --- Target für moderne CMake-Nutzung ---
+        # Create a CMake target
         if(NOT TARGET libusb::libusb)
             add_library(libusb::libusb UNKNOWN IMPORTED GLOBAL)
             set_target_properties(libusb::libusb PROPERTIES
@@ -166,7 +166,7 @@ elseif(MINGW AND EXISTS "/etc/debian_version")
 
 # All other Unix-based systems (Linux, macOS, etc.)
 else()
-    # Use pkg-config to find libusb if available
+    # Use pkg-config to find libusb (if available)
     find_package(PkgConfig QUIET)
     if(PKG_CONFIG_FOUND)
         pkg_search_module(PC_LIBUSB QUIET libusb-1.0)

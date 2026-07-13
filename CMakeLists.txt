@@ -233,11 +233,21 @@ set(STLINK_SOURCE
         src/stlink-lib/usb.c
         )
 
-## Windows-specific source- and headerfiles for stlink library
+## Windows-specific build configuration
 if (WIN32)
-    include_directories(src/win32)
-    set(STLINK_SOURCE "${STLINK_SOURCE};src/win32/win32_socket.c")
-    set(STLINK_HEADERS "${STLINK_HEADERS};src/win32/win32_socket.h")
+    message(STATUS "Configuring for Windows (Windows 10+)")
+
+    # Compiler definitions for Windows
+    add_definitions(
+        -D_WIN32_WINNT=0x0A00   # Minimum system requirement: Windows 10
+        -D_WIN32=1              # Define _WIN32 for platform specific code
+    )
+
+    link_libraries(ws2_32)      # Link Windows-Socket library
+
+    # Add Windows-specific source- and headerfiles
+    list(APPEND STLINK_SOURCE  src/win32/win32_socket.c)
+    list(APPEND STLINK_HEADERS src/win32/win32_socket.h)
 
 
 

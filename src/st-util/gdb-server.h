@@ -22,7 +22,6 @@
 #endif
 
 #if defined(_WIN32)
-//#include <win32_socket.h>
 #include <windows.h>
 #else
 #include <arpa/inet.h>
