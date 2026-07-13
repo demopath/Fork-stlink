@@ -13,8 +13,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-// #include <sys/stat.h>  // TODO: Check use
-// #include <sys/types.h> // TODO: Check use
 
 #include <stlink.h>
 #include <stlink_backend.h>
@@ -29,6 +27,7 @@
 #include "md5.h"
 #include "read_write.h"
 #include "usb.h"
+
 
 #ifndef O_BINARY
 #define O_BINARY 0
@@ -455,10 +454,30 @@ int32_t stlink_exit_debug_mode(stlink_t *sl) {
       return 0;
   }
 
-  if(sl->flash_type != STM32_FLASH_TYPE_UNKNOWN &&
-      sl->core_stat != TARGET_RESET) {
-    // stop debugging if the target has been identified
-    stlink_write_debug32(sl, STM32_REG_DHCSR, STM32_REG_DHCSR_DBGKEY);
+  if(sl->flash_type != STM32_FLASH_TYPE_UNKNOWN) {
+    if(sl->core_stat != TARGET_RESET) {
+      // stop debugging if the target has been identified
+      stlink_write_debug32(sl, STM32_REG_DHCSR, STM32_REG_DHCSR_DBGKEY);
+    }
+
+    // Disarm vector-catch-on-reset before detaching. --connect-under-reset
+    // arms DEMCR.VC_CORERESET (halt-on-reset); it lives in the debug power
+    // domain and survives NRST, so if left armed the core halts on every reset
+    // -- including NVIC_SystemReset() from firmware -- and the board looks
+    // bricked until a power cycle. This must run even when core_stat is
+    // TARGET_RESET, which is exactly the connect-under-reset case that would
+    // otherwise skip the cleanup. Only the read failing (dead debug link)
+    // stops us, and we preserve the other DEMCR bits.
+    uint32_t demcr = 0;
+    if(!stlink_read_debug32(sl, STM32_REG_CM3_DEMCR, &demcr) &&
+        (demcr & STM32_REG_CM3_DEMCR_VC_CORERESET)) {
+      if(stlink_write_debug32(sl, STM32_REG_CM3_DEMCR,
+                              demcr & ~STM32_REG_CM3_DEMCR_VC_CORERESET)) {
+        WLOG("Could not clear DEMCR.VC_CORERESET; target may halt on reset\n");
+      }
+      // clear the stale vector-catch status in DFSR
+      stlink_write_debug32(sl, STM32_REG_DFSR, STM32_REG_DFSR_VCATCH);
+    }
   }
 
   return (sl->backend->exit_debug_mode(sl));
@@ -700,7 +719,7 @@ int32_t stlink_parse_ihex(const char *path, uint8_t erased_pattern, uint8_t **me
     // parse file two times - first to find memory range, second - to fill it
     if(scan == 1) {
       if(!eof_found) {
-        ELOG("No EoF recond\n");
+        ELOG("No EoF record\n");
         res = -1;
         break;
       }
@@ -1142,9 +1161,9 @@ int32_t stlink_fread(stlink_t *sl, const char *path, bool is_ihex, stm32_addr_t 
   } else {
     struct stlink_fread_worker_arg arg = {fd};
     error = stlink_read(sl, addr, size, &stlink_fread_worker, &arg);
+    close(fd);
   }
 
-  close(fd);
   return (error);
 }
 
@@ -1378,7 +1397,9 @@ int32_t stlink_load_device_params(stlink_t *sl) {
 
   sl->flash_type = params->flash_type;
   sl->flash_pgsz = params->flash_pagesize;
-  sl->sram_size = params->sram_size;
+  if(params->flash_type != STM32_FLASH_TYPE_WB0) {
+    sl->sram_size = params->sram_size;
+  }
   sl->sys_base = params->bootrom_base;
   sl->sys_size = params->bootrom_size;
   sl->option_base = params->option_base;

@@ -1,51 +1,33 @@
 # Findlibusb.cmake
 # Modern CMake 3.20+ Find module for libusb-1.0
+#
 # Defines:
 #   - Imported Target: libusb::libusb
+#   - Variables: LIBUSB_FOUND, LIBUSB_INCLUDE_DIR, LIBUSB_LIBRARY
+#
 
 include(FetchContent)
 include(FindPackageHandleStandardArgs)
 
-set(LIBUSB_FOUND FALSE)
+set(LIBUSB_FOUND FALSE)  # Default: libusb not found
 
-# FreeBSD: libusb is integrated into the system
+# --- Platform-specific configurations ---
+# FreeBSD: libusb is part of the base system
 if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
     find_path(LIBUSB_INCLUDE_DIR NAMES libusb.h HINTS /usr/include)
     find_library(LIBUSB_LIBRARY NAMES usb HINTS /usr /usr/local /opt)
 
-    if(LIBUSB_INCLUDE_DIR AND LIBUSB_LIBRARY)
-        set(LIBUSB_FOUND TRUE)
-        if(NOT TARGET libusb::libusb)
-            add_library(libusb::libusb UNKNOWN IMPORTED GLOBAL)
-            set_target_properties(libusb::libusb PROPERTIES
-                INTERFACE_INCLUDE_DIRECTORIES "${LIBUSB_INCLUDE_DIR}"
-                IMPORTED_LOCATION "${LIBUSB_LIBRARY}"
-            )
-        endif()
-    endif()
-
-# OpenBSD: libusb is available from ports
+# OpenBSD: libusb available via ports/packages
 elseif(CMAKE_SYSTEM_NAME STREQUAL "OpenBSD")
     find_path(LIBUSB_INCLUDE_DIR NAMES libusb.h HINTS /usr/local/include PATH_SUFFIXES libusb-1.0)
     find_library(LIBUSB_LIBRARY NAMES usb-1.0 HINTS /usr/local)
 
-    if(LIBUSB_INCLUDE_DIR AND LIBUSB_LIBRARY)
-        set(LIBUSB_FOUND TRUE)
-        if(NOT TARGET libusb::libusb)
-            add_library(libusb::libusb UNKNOWN IMPORTED GLOBAL)
-            set_target_properties(libusb::libusb PROPERTIES
-                INTERFACE_INCLUDE_DIRECTORIES "${LIBUSB_INCLUDE_DIR}"
-                IMPORTED_LOCATION "${LIBUSB_LIBRARY}"
-            )
-        endif()
-    endif()
-
-# Windows, MSVC, or MinGW (including Cross-Compiling from Linux/macOS)
-elseif(WIN32 OR MSVC OR MINGW)
-    # Fix for ssize_t on Windows
+# Windows (native MSVC or MinGW without cross-compiling)
+elseif(MSVC OR (WIN32 AND NOT EXISTS "/etc/debian_version"))
+    # Fix for missing ssize_t on Windows (required by libusb)
     add_compile_definitions(_SSIZE_T_DEFINED ssize_t=int64_t)
 
-    # 1. Try to find an already installed local Windows version of libusb
+    # Try to locate an existing Windows installation of libusb
     find_path(LIBUSB_INCLUDE_DIR
         NAMES libusb.h
         HINTS "C:/Program Files/libusb-1.0/include" "C:/Program Files (x86)/libusb-1.0/include"
@@ -57,18 +39,21 @@ elseif(WIN32 OR MSVC OR MINGW)
         HINTS "C:/Program Files/libusb-1.0" "C:/Program Files (x86)/libusb-1.0"
     )
 
-    if(LIBUSB_INCLUDE_DIR AND LIBUSB_LIBRARY)
-        set(LIBUSB_FOUND TRUE)
-        if(NOT TARGET libusb::libusb)
-            add_library(libusb::libusb UNKNOWN IMPORTED GLOBAL)
-            set_target_properties(libusb::libusb PROPERTIES
-                INTERFACE_INCLUDE_DIRECTORIES "${LIBUSB_INCLUDE_DIR}"
-                IMPORTED_LOCATION "${LIBUSB_LIBRARY}"
-            )
-        endif()
-    endif()
+# Windows-Build with MinGW via cross-compiling on Debian-Linux
+elseif(MINGW AND EXISTS "/etc/debian_version")
+    # Fix for ssize_t on Windows
+    add_compile_definitions(_SSIZE_T_DEFINED ssize_t=int64_t)
 
-    # 2. Modern FetchContent logic for Cross-Compiling (e.g. Debian host)
+    # Architecture: 64-bit or 32-bit?
+    if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+        message(STATUS "=== Building for Windows (x86-64) ===")
+        set(ARCH 64)
+    else ()
+        message(STATUS "=== Building for Windows (i686) ===")
+        set(ARCH 32)
+    endif ()
+
+    # Download and build libusb via FetchContent
     if(NOT LIBUSB_FOUND)
         message(STATUS "libusb-1.0 not found locally. Downloading and building from source via FetchContent...")
 
@@ -79,20 +64,115 @@ elseif(WIN32 OR MSVC OR MINGW)
         )
         FetchContent_MakeAvailable(libusb)
 
-        # Alias the internal target from libusb-cmake to our standard namespaced target
-        if(TARGET libusb-1.0 AND NOT TARGET libusb::libusb)
-            add_library(libusb::libusb ALIAS libusb-1.0)
-            set(LIBUSB_FOUND TRUE)
+        # Run bootstrap.sh (if available)
+        if(EXISTS "${libusb_SOURCE_DIR}/bootstrap.sh")
+            execute_process(
+                COMMAND ./bootstrap.sh
+                WORKING_DIRECTORY ${libusb_SOURCE_DIR}
+                RESULT_VARIABLE BOOTSTRAP_RESULT
+            )
+        endif()
+
+        # Configuration for MinGW
+        execute_process(
+            COMMAND test -f configure || ./bootstrap
+            COMMAND ./configure --host=i686-w64-mingw${ARCH} --prefix=${libusb_BINARY_DIR}/install 
+                                --enable-static --disable-shared --disable-udev
+            WORKING_DIRECTORY ${libusb_SOURCE_DIR}
+            RESULT_VARIABLE CONFIGURE_RESULT
+        )
+
+        # Build and install library
+        execute_process(
+            COMMAND make
+            COMMAND make install
+            WORKING_DIRECTORY ${libusb_SOURCE_DIR}
+            RESULT_VARIABLE MAKE_RESULT
+        )
+
+        # Get include dir and library path from the target
+        set(LIBUSB_INCLUDE_DIR "${libusb_SOURCE_DIR}/libusb")
+        set(LIBUSB_LIBRARY "${libusb_SOURCE_DIR}/../libusb-build/install/lib/libusb-1.0.a")
+
+        # Create a CMake target
+        if(NOT TARGET libusb::libusb)
+            add_library(libusb::libusb UNKNOWN IMPORTED GLOBAL)
+            set_target_properties(libusb::libusb PROPERTIES
+                INTERFACE_INCLUDE_DIRECTORIES "${LIBUSB_INCLUDE_DIR}"
+                IMPORTED_LOCATION "${LIBUSB_LIBRARY}"
+            )
+        endif()
+    endif()
+
+    # Architecture: 64-bit or 32-bit?
+    if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+        message(STATUS "=== Building for Windows (x86-64) ===")
+        set(ARCH 64)
+    else ()
+        message(STATUS "=== Building for Windowsm (i686) ===")
+        set(ARCH 32)
+    endif ()
+
+    # Download and build libusb via FetchContent
+    if(NOT LIBUSB_FOUND)
+        message(STATUS "libusb-1.0 not found locally. Downloading and building from source via FetchContent...")
+
+        FetchContent_Declare(
+            libusb
+            GIT_REPOSITORY "https://github.com/libusb/libusb.git"
+            GIT_TAG "v1.0.30"
+        )
+        FetchContent_MakeAvailable(libusb)
+
+        # Run bootstrap.sh (if available)
+        if(EXISTS "${libusb_SOURCE_DIR}/bootstrap.sh")
+            execute_process(
+                COMMAND ./bootstrap.sh
+                WORKING_DIRECTORY ${libusb_SOURCE_DIR}
+                RESULT_VARIABLE BOOTSTRAP_RESULT
+            )
+        endif()
+
+        # Configuration for MinGW
+        execute_process(
+            COMMAND test -f configure || ./bootstrap
+            COMMAND ./configure --host=i686-w64-mingw${ARCH} --prefix=${libusb_BINARY_DIR}/install 
+                                --enable-static --disable-shared --disable-udev
+            WORKING_DIRECTORY ${libusb_SOURCE_DIR}
+            RESULT_VARIABLE CONFIGURE_RESULT
+        )
+
+        # Build and install library
+        execute_process(
+            COMMAND make
+            COMMAND make install
+            WORKING_DIRECTORY ${libusb_SOURCE_DIR}
+            RESULT_VARIABLE MAKE_RESULT
+        )
+
+        # Get include dir and library path from the target
+        set(LIBUSB_INCLUDE_DIR "${libusb_SOURCE_DIR}/libusb")
+        set(LIBUSB_LIBRARY "${libusb_SOURCE_DIR}/../libusb-build/install/lib/libusb-1.0.a")
+
+        # Create a CMake target
+        if(NOT TARGET libusb::libusb)
+            add_library(libusb::libusb UNKNOWN IMPORTED GLOBAL)
+            set_target_properties(libusb::libusb PROPERTIES
+                INTERFACE_INCLUDE_DIRECTORIES "${LIBUSB_INCLUDE_DIR}"
+                IMPORTED_LOCATION "${LIBUSB_LIBRARY}"
+            )
         endif()
     endif()
 
 # All other Unix-based systems (Linux, macOS, etc.)
 else()
+    # Use pkg-config to find libusb (if available)
     find_package(PkgConfig QUIET)
     if(PKG_CONFIG_FOUND)
         pkg_search_module(PC_LIBUSB QUIET libusb-1.0)
     endif()
 
+    # Locate include directory and library using pkg-config hints or defaults
     find_path(LIBUSB_INCLUDE_DIR
         NAMES libusb.h
         HINTS ${PC_LIBUSB_INCLUDE_DIRS}
@@ -103,18 +183,27 @@ else()
         NAMES usb-1.0
         HINTS ${PC_LIBUSB_LIBRARY_DIRS}
     )
+endif()
 
-    if(LIBUSB_INCLUDE_DIR AND LIBUSB_LIBRARY)
-        set(LIBUSB_FOUND TRUE)
-        if(NOT TARGET libusb::libusb)
-            add_library(libusb::libusb UNKNOWN IMPORTED GLOBAL)
-            set_target_properties(libusb::libusb PROPERTIES
-                INTERFACE_INCLUDE_DIRECTORIES "${LIBUSB_INCLUDE_DIR}"
-                IMPORTED_LOCATION "${LIBUSB_LIBRARY}"
-            )
-        endif()
+# Finalize the imported target
+# Only proceed if both include dir and library path were found
+if(LIBUSB_INCLUDE_DIR AND LIBUSB_LIBRARY)
+    set(LIBUSB_FOUND TRUE)  # Update found status
+
+    # Create the imported target if it doesn't exist yet
+    if(NOT TARGET libusb::libusb)
+        # Create an imported target (type UNKNOWN = static or shared library)
+        add_library(libusb::libusb UNKNOWN IMPORTED GLOBAL)
+
+        # Set the target's properties:
+        # - INTERFACE_INCLUDE_DIRECTORIES: Where to find libusb.h
+        # - IMPORTED_LOCATION: Path to the compiled library (e.g., libusb-1.0.a/.so/.lib)
+        set_target_properties(libusb::libusb PROPERTIES
+            INTERFACE_INCLUDE_DIRECTORIES "${LIBUSB_INCLUDE_DIR}"
+            IMPORTED_LOCATION "${LIBUSB_LIBRARY}"
+        )
     endif()
 endif()
 
-# Handle standard REQUIRED/QUIET arguments
+# Handle standard REQUIRED/QUIET arguments for find_package()
 find_package_handle_standard_args(libusb REQUIRED_VARS LIBUSB_FOUND)

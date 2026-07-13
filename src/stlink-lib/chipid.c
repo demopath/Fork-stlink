@@ -4,19 +4,10 @@
  * Chip-ID parametres
  */
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <stm32.h>
-#include <stlink.h>
 #include "chipid.h"
 
 #include "logging.h"
 
-// #include <ctype.h> // TODO: Check use
-// #include <errno.h> // TODO: Check use
 
 static struct stlink_chipid_params *devicelist;
 
@@ -254,7 +245,7 @@ void init_chipids(char *dir_to_scan) {
   HANDLE hFind = INVALID_HANDLE_VALUE;
   WIN32_FIND_DATAA ffd;
   char filepath[MAX_PATH] = {0};
-  int32_t filepathlen;
+  int32_t filepathlen = 0;
 
   StringCchCopyA(filepath, STLINK_ARRAY_SIZE(filepath), dir_to_scan);
 

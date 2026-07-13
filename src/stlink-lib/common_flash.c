@@ -4,13 +4,6 @@
  * Flash operations
  */
 
-#include <stdint.h>
-
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-
-#include <stlink.h>
 #include "common_flash.h"
 
 #include "calculate.h"
@@ -19,6 +12,7 @@
 #include "map_file.h"
 #include "md5.h"
 #include "read_write.h"
+
 
 #define DEBUG_FLASH 0
 

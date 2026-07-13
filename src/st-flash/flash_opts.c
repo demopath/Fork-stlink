@@ -1,20 +1,14 @@
 /*
  * File: flash_opts.c
  *
+ * Tool: st-flash
+ *
  * Flash Options
  */
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <stm32.h>
-#include <stlink.h>
-#include "flash_opts.h"
 #include "flash.h"
+#include "flash_opts.h"
 
-#include <helper.h>
 
 static bool starts_with(const char * str, const char * prefix) {
     uint64_t n = strlen(prefix);

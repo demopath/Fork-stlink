@@ -1,21 +1,14 @@
 /*
  * Copyright (c) 2011 Peter Zotov <whitequark@whitequark.org>
  * Use of this source code is governed by a BSD-style license that can be found in the LICENSE file.
+ *
+ * File: gdb-remote.c
+ *
+ * Tool: st-util
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdint.h>
-#include <stdlib.h>
-
-#if defined(_WIN32)
-#include <win32_socket.h>
-#else
-#include <unistd.h>
-#include <poll.h>
-#endif
-
 #include "gdb-remote.h"
+
 
 static const char hex[] = "0123456789abcdef";
 

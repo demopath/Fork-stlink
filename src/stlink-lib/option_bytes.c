@@ -4,11 +4,6 @@
  * Read and write option bytes and option control registers
  */
 
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-
-#include <stlink.h>
 #include "option_bytes.h"
 
 #include "common_flash.h"
@@ -17,6 +12,7 @@
 #include "map_file.h"
 #include "md5.h"
 #include "read_write.h"
+
 
 /**
  * Read option control register C0

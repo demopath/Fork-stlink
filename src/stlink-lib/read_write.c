@@ -4,15 +4,10 @@
  * Read and write operations
  */
 
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-
-#include <stlink.h>
-#include <stlink_backend.h>
 #include "read_write.h"
 
 #include "logging.h"
+
 
 // Endianness
 // https://commandcenter.blogspot.com/2012/04/byte-order-fallacy.html

@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) 2026 James Walmsley <james@fullfat-fs.co.uk>
+ * Use of this source code is governed by a BSD-style license that can be found in the LICENSE file.
+ *
  * File: remote.c
  *
  * Remote backend + server dispatch. See remote.h.
@@ -18,31 +21,11 @@
  * probe; the server applies the supplied ap before each operation.
  */
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-
-#if defined(_WIN32)
-#include <win32_socket.h>
-#else
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <sys/select.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#endif
-
-#include <stlink.h>
-#include <stlink_backend.h>
-
 #include "remote.h"
+
 #include "read_write.h"
 #include "logging.h"
+
 
 #define REQ_HDR_LEN 20
 #define REP_HDR_LEN 12
@@ -264,7 +247,7 @@ static int32_t rb_core_id(stlink_t *sl) {
 
 static int32_t rb_status(stlink_t *sl) {
     uint8_t p[4]; uint32_t pl;
-    int32_t ret = remote_rpc(sl, RPC_STATUS, 0, 0, NULL, 0, p, sizeof(p), &pl);
+    int32_t ret = remote_rpc(sl, RPC_STATUS_REMOTE, 0, 0, NULL, 0, p, sizeof(p), &pl);
     if (ret == 0 && pl == 4) { sl->core_stat = (enum target_state)read_uint32(p, 0); }
     return (ret);
 }
@@ -334,11 +317,12 @@ static int32_t rb_read_unsupported_reg(stlink_t *sl, int32_t r_idx, struct stlin
 
 static int32_t rb_write_unsupported_reg(stlink_t *sl, uint32_t value, int32_t r_idx, struct stlink_reg *regp) {
     uint8_t p[REG_WIRE_LEN];
+    uint8_t rp[REG_WIRE_LEN];
     uint32_t pl;
     reg_to_wire(p, regp);
     int32_t ret = remote_rpc(sl, RPC_WRITE_UNSUPPORTED_REG, value, (uint32_t)r_idx,
-                             p, sizeof(p), p, sizeof(p), &pl);
-    if (ret == 0 && pl == REG_WIRE_LEN) { reg_from_wire(regp, p); }
+                             p, sizeof(p), rp, sizeof(rp), &pl);
+    if (ret == 0 && pl == REG_WIRE_LEN) { reg_from_wire(regp, rp); }
     else if (ret == 0) { ret = -1; }
     return (ret);
 }
@@ -589,11 +573,11 @@ int32_t stlink_remote_serve(stlink_t *sl, int32_t fd) {
             ret = sl->backend->core_id(sl);
             write_uint32(scratch, sl->core_id); rpay = scratch; rplen = 4;
             break;
-        case RPC_STATUS:
+        case RPC_STATUS_REMOTE:
             ret = sl->backend->status(sl);
             write_uint32(scratch, (uint32_t)sl->core_stat); rpay = scratch; rplen = 4;
             break;
-        case RPC_VERSION:
+        case RPC_VERSION_REMOTE:
             ret = sl->backend->version(sl);
             break;
         case RPC_READ_DEBUG32: {

@@ -1,47 +1,17 @@
 /*
  * Copyright (c) 2011 Peter Zotov <whitequark@whitequark.org>
  * Use of this source code is governed by a BSD-style license that can be found in the LICENSE file.
+ *
+ * File: gdb-server.c
+ *
+ * Tool: st-util
  */
 
-#include <ctype.h>
-#include <getopt.h>
-#include <signal.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <sys/types.h>
-
-#if defined(_MSC_VER)
-#include <stdbool.h>
-#define __attribute__(x)
-#endif
-
-#if defined(_WIN32)
-#include <win32_socket.h>
-#else
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#endif
-
-#include <stlink.h>
-#include <stm32_register.h>
-
 #include "gdb-server.h"
-#include <remote.h>
 #include "gdb-remote.h"
 #include "memory-map.h"
 #include "semihosting.h"
 
-#include <chipid.h>
-#include <common_flash.h>
-#include <flash_loader.h>
-#include <helper.h>
-#include <logging.h>
-#include <read_write.h>
-#include <usb.h>
 
 #define FLASH_BASE 0x08000000
 
