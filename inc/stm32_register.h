@@ -48,7 +48,7 @@
 #define STM32_REG_DFSR_EXTERNAL               (1 << 4)
 #define STM32_REG_DFSR_CLEAR                  0x0000001f
 #define STM32_REG_DHCSR                       0xe000edf0
-#define STM32_REG_DHCSR_DBGKEY                (0xa05f << 16)
+#define STM32_REG_DHCSR_DBGKEY                (int32_t) (((uint32_t) 0xa05f) << 16)
 #define STM32_REG_DHCSR_C_DEBUGEN             (1 << 0)
 #define STM32_REG_DHCSR_C_HALT                (1 << 1)
 #define STM32_REG_DHCSR_C_STEP                (1 << 2)
