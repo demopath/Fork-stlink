@@ -14,7 +14,7 @@
 
 // 1 GB max file size
 #ifndef MAX_FILE_SIZE
-#define MAX_FILE_SIZE (1<<20)
+#define MAX_FILE_SIZE (1U<<30)
 #endif
 
 /* Limit the block size to compare to 0x1800 as anything larger will stall the

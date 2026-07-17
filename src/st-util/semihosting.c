@@ -188,7 +188,9 @@ int32_t do_semihosting (stlink_t *sl, uint32_t r0, uint32_t r1, uint32_t *ret) {
         if (name_len == 4 && strncmp(":tt", name, 3) == 0) {
             if (mode <= 3) {
                 *ret = STDIN_FILENO;
-            } else if (mode >= 4 && mode <= 11) {
+            } else if (mode >= 4 && mode <= 7) {
+                *ret = STDOUT_FILENO;
+            } else if (mode >= 8 && mode <= 11) {
                 *ret = STDERR_FILENO;
             } else {
                 DLOG("Semihosting SYS_OPEN error: invalid mode %d for :tt\n", mode);
