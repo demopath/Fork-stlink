@@ -1635,7 +1635,11 @@ int32_t serve(stlink_t *sl, st_state_t *st) {
 
             stlink_close(sl);
 
-            sl = stlink_open_usb(st->logging_level, st->connect_mode, st->serialnumber, st->freq);
+            if(st->remote) {
+                sl = stlink_open_remote_str(st->logging_level, st->remote, st->connect_mode, st->freq);
+            } else {
+                sl = stlink_open_usb(st->logging_level, st->connect_mode, st->serialnumber, st->freq);
+            }
             if(sl == NULL || sl->chip_id == STM32_CHIPID_UNKNOWN) { cleanup(0); }
 
             connected_stlink = sl;
