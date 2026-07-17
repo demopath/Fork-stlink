@@ -1636,7 +1636,7 @@ int32_t serve(stlink_t *sl, st_state_t *st) {
             stlink_close(sl);
 
             if(st->remote) {
-                sl = stlink_open_remote_str(st->remote, st->logging_level, st->connect_mode);
+                sl = stlink_open_remote_str(st->logging_level, st->remote, st->connect_mode, st->freq);
             } else {
                 sl = stlink_open_usb(st->logging_level, st->connect_mode, st->serialnumber, st->freq);
             }
