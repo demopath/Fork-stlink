@@ -455,25 +455,30 @@ int32_t stlink_exit_debug_mode(stlink_t *sl) {
   }
 
   if(sl->flash_type != STM32_FLASH_TYPE_UNKNOWN) {
-    if(sl->core_stat != TARGET_RESET) {
-      // stop debugging if the target has been identified
-      stlink_write_debug32(sl, STM32_REG_DHCSR, STM32_REG_DHCSR_DBGKEY);
-    }
+    // stop debugging if the target has been identified. This must also run
+    // when the last command was a reset (core_stat == TARGET_RESET, e.g.
+    // `st-flash reset` or `write --reset`, since stlink_run() does not update
+    // core_stat): C_DEBUGEN survives system resets, and left set it keeps any
+    // armed vector catch live, halting the target with no debugger attached.
+    stlink_write_debug32(sl, STM32_REG_DHCSR, STM32_REG_DHCSR_DBGKEY);
 
-    // Disarm vector-catch-on-reset before detaching. --connect-under-reset
-    // arms DEMCR.VC_CORERESET (halt-on-reset); it lives in the debug power
-    // domain and survives NRST, so if left armed the core halts on every reset
-    // -- including NVIC_SystemReset() from firmware -- and the board looks
-    // bricked until a power cycle. This must run even when core_stat is
-    // TARGET_RESET, which is exactly the connect-under-reset case that would
-    // otherwise skip the cleanup. Only the read failing (dead debug link)
-    // stops us, and we preserve the other DEMCR bits.
+    // Disarm the vector catches armed at connect before detaching.
+    // stlink_soft_reset() arms DEMCR.VC_CORERESET (halt-on-reset) and
+    // VC_HARDERR/VC_BUSERR (halt-on-fault); they live in the debug power
+    // domain and survive NRST, so if left armed the core halts on every reset
+    // -- including NVIC_SystemReset() from firmware -- or silently at its next
+    // hard/bus fault instead of running the fault handler, and the board looks
+    // bricked until a power cycle. Only the read failing (dead debug link)
+    // stops us, and we preserve the other DEMCR bits (TRCENA, MON_EN).
+    const uint32_t vector_catches = STM32_REG_CM3_DEMCR_VC_CORERESET |
+                                    STM32_REG_CM3_DEMCR_VC_HARDERR |
+                                    STM32_REG_CM3_DEMCR_VC_BUSERR;
     uint32_t demcr = 0;
     if(!stlink_read_debug32(sl, STM32_REG_CM3_DEMCR, &demcr) &&
-        (demcr & STM32_REG_CM3_DEMCR_VC_CORERESET)) {
+        (demcr & vector_catches)) {
       if(stlink_write_debug32(sl, STM32_REG_CM3_DEMCR,
-                              demcr & ~STM32_REG_CM3_DEMCR_VC_CORERESET)) {
-        WLOG("Could not clear DEMCR.VC_CORERESET; target may halt on reset\n");
+                              demcr & ~vector_catches)) {
+        WLOG("Could not clear DEMCR vector catches; target may halt on reset or fault\n");
       }
       // clear the stale vector-catch status in DFSR
       stlink_write_debug32(sl, STM32_REG_DFSR, STM32_REG_DFSR_VCATCH);
