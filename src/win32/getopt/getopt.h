@@ -1,3 +1,11 @@
+/*
+ * File: getopt.h
+ *
+ *
+ */
+
+// TODO: CONTENT AND USE OF THIS SOURCE FILE IS TO BE VERIFIED
+
 #ifndef GETOPT_H
 #define GETOPT_H
 

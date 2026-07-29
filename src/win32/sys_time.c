@@ -1,3 +1,11 @@
+/*
+ * File: sys_time.c
+ *
+ *
+ */
+
+// TODO: CONTENT AND USE OF THIS SOURCE FILE IS TO BE VERIFIED
+
 #include <stdint.h>
 
 #include "sys_time.h"

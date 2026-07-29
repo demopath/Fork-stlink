@@ -1,8 +1,15 @@
-/*
- * File: stlink.h
- *
- * All common top level stlink interfaces, regardless of how the backend does the work...
- */
+/**
+  ******************************************************************************
+  * @file           : stlink.h
+  * @brief          : Common top level stlink interfaces
+  * @copyright      : Copyright (c) 2026 stlink-org. All rights reserved.
+  * @date           : 2026-07-27
+  * SPDX-License-Identifier: BSD-3-Clause
+  *
+  * This file is licensed under the BSD 3-Clause License.
+  * See the LICENSE file in the project root for full license information.
+  ******************************************************************************
+  */
 
 #ifndef STLINK_H
 #define STLINK_H

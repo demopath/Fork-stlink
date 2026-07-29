@@ -1,10 +1,11 @@
-/* == nightwalker-87: TODO: CONTENT AND USE OF THIS SOURCE FILE IS TO BE VERIFIED (07.06.2023) == */
-
 /*
  * File: sg_legacy.h
  *
  *
  */
+
+// TODO: CONTENT AND USE OF THIS SOURCE FILE IS TO BE VERIFIED
+// This file should be split up into new or existing modules
 
 #ifndef SG_LEGACY_H
 #define SG_LEGACY_H

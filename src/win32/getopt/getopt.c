@@ -1,3 +1,11 @@
+/*
+ * File: getopt.c
+ *
+ *
+ */
+
+// TODO: CONTENT AND USE OF THIS SOURCE FILE IS TO BE VERIFIED
+
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>

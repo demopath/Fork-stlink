@@ -1,8 +1,15 @@
-/*
- * File: stm32.h
- *
- * STM32-specific defines & identification parametres
- */
+/**
+  ******************************************************************************
+  * @file           : stm32.h
+  * @brief          : STM32-specific defines & identification parametres
+  * @copyright      : Copyright (c) 2026 stlink-org. All rights reserved.
+  * @date           : 2026-07-27
+  * SPDX-License-Identifier: BSD-3-Clause
+  *
+  * This file is licensed under the BSD 3-Clause License.
+  * See the LICENSE file in the project root for full license information.
+  ******************************************************************************
+  */
 
 #ifndef STM32_H
 #define STM32_H
