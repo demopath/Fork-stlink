@@ -1,3 +1,11 @@
+/*
+ * File: mmap.h
+ *
+ *
+ */
+
+// TODO: CONTENT AND USE OF THIS SOURCE FILE IS TO BE VERIFIED
+
 #ifndef MMAP_H
 #define MMAP_H
 

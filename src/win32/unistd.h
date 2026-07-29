@@ -1,3 +1,11 @@
+/*
+ * File: unistd.h
+ *
+ *
+ */
+
+// TODO: CONTENT AND USE OF THIS SOURCE FILE IS TO BE VERIFIED
+
 #ifndef UNISTD_H
 #define UNISTD_H
 

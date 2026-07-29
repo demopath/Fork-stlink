@@ -1,8 +1,15 @@
-/*
- * File: common_flash.c
- *
- * Flash operations
- */
+/**
+  ******************************************************************************
+  * @file           : common_flash.c
+  * @brief          : Flash operations
+  * @copyright      : Copyright (c) 2026 stlink-org. All rights reserved.
+  * @date           : 2026-07-27
+  * SPDX-License-Identifier: BSD-3-Clause
+  *
+  * This file is licensed under the BSD 3-Clause License.
+  * See the LICENSE file in the project root for full license information.
+  ******************************************************************************
+  */
 
 #include "common_flash.h"
 
@@ -1071,12 +1078,14 @@ int32_t stlink_erase_flash_page(stlink_t *sl, stm32_addr_t flashaddr) {
   clear_flash_error(sl);
 
   if(sl->flash_type == STM32_FLASH_TYPE_F2_F4 ||
-      sl->flash_type == STM32_FLASH_TYPE_F7 ||
-      sl->flash_type == STM32_FLASH_TYPE_L4) {
+     sl->flash_type == STM32_FLASH_TYPE_F7 ||
+     sl->flash_type == STM32_FLASH_TYPE_L4) {
     // unlock if locked
     unlock_flash_if(sl);
 
     // select the page to erase
+
+    // STM32L4
     if(sl->flash_type == STM32_FLASH_TYPE_L4) {
       // calculate the actual bank+page from the address
       uint32_t page = calculate_L4_page(sl, flashaddr);
@@ -1085,6 +1094,8 @@ int32_t stlink_erase_flash_page(stlink_t *sl, stm32_addr_t flashaddr) {
               stlink_calculate_pagesize(sl, flashaddr));
 
       write_flash_cr_bker_pnb(sl, page);
+
+    // STM32F7
     } else if(sl->chip_id == STM32_CHIPID_F7 ||
                sl->chip_id == STM32_CHIPID_F76xxx) {
       // calculate the actual page from the address
@@ -1093,6 +1104,9 @@ int32_t stlink_erase_flash_page(stlink_t *sl, stm32_addr_t flashaddr) {
       fprintf(stderr, "EraseFlash - Sector:0x%x Size:0x%x ", sector,
               stlink_calculate_pagesize(sl, flashaddr));
       write_flash_cr_snb(sl, sector, BANK_1);
+
+    // STM32F2
+    // STM32F4
     } else {
       // calculate the actual page from the address
       uint32_t sector = calculate_F4_sectornum(flashaddr);
@@ -1115,6 +1129,9 @@ int32_t stlink_erase_flash_page(stlink_t *sl, stm32_addr_t flashaddr) {
 #if DEBUG_FLASH
     fprintf(stdout, "Erase Final CR:0x%x\n", read_flash_cr(sl, BANK_1));
 #endif
+
+  // STM32L0
+  // STM32L1
   } else if(sl->flash_type == STM32_FLASH_TYPE_L0_L1) {
 
     uint32_t val;
@@ -1177,6 +1194,8 @@ int32_t stlink_erase_flash_page(stlink_t *sl, stm32_addr_t flashaddr) {
     set_flash_cr_per(sl, BANK_1); // set the 'enable Flash erase' bit
 
     // set the page to erase
+
+    // STM32G0
     if(sl->flash_type == STM32_FLASH_TYPE_G0) {
       uint32_t flash_page = ((flashaddr - STM32_FLASH_BASE) / sl->flash_pgsz);
       stlink_read_debug32(sl, STM32_FLASH_Gx_CR, &val);
@@ -1184,6 +1203,15 @@ int32_t stlink_erase_flash_page(stlink_t *sl, stm32_addr_t flashaddr) {
       val &= ~(0x3FF << 3);
       val |= ((flash_page & 0x3FF) << 3) | (1 << FLASH_CR_PER);
       stlink_write_debug32(sl, STM32_FLASH_Gx_CR, val);
+
+    // wait 100 ms to ensure flash controller is ready (no parallel R/W for STM32G0)
+    #ifdef _WIN32
+        Sleep(100);
+    #else
+        usleep(100000);
+    #endif
+
+    // STM32G4
     } else if(sl->flash_type == STM32_FLASH_TYPE_G4) {
       uint32_t flash_page = ((flashaddr - STM32_FLASH_BASE) / sl->flash_pgsz);
       stlink_read_debug32(sl, STM32_FLASH_Gx_CR, &val);
@@ -1203,9 +1231,12 @@ int32_t stlink_erase_flash_page(stlink_t *sl, stm32_addr_t flashaddr) {
       }
       val |= ((flash_page & 0x7FF) << 3) | (1 << FLASH_CR_PER);
       stlink_write_debug32(sl, STM32_FLASH_Gx_CR, val);
-    // STM32L5x2xx has two banks with 2k pages or single with 4k pages
-    // STM32H5xx, STM32U535, STM32U545, STM32U575 or STM32U585 have 2 banks with 8k pages
+
+    // STM32L5
+    // STM32U5
     } else if(sl->flash_type == STM32_FLASH_TYPE_L5_U5) {
+    // STM32L5x2xx has two banks with 2k pages or single with 4k pages
+    // STM32U535, STM32U545, STM32U575 or STM32U585 have 2 banks with 8k pages
       uint32_t flash_page;
       stlink_read_debug32(sl, STM32_FLASH_L5_NSCR, &val);
       if((sl->flash_pgsz == 0x800 || sl->flash_pgsz == 0x2000) && (flashaddr - STM32_FLASH_BASE) >= sl->flash_size/2) {
@@ -1223,6 +1254,9 @@ int32_t stlink_erase_flash_page(stlink_t *sl, stm32_addr_t flashaddr) {
       val &= ~(0xFF << 3);
       val |= ((flash_page & 0xFF) << 3) | (1 << FLASH_CR_PER);
       stlink_write_debug32(sl, STM32_FLASH_L5_NSCR, val);
+
+    // STM32WB
+    // STM32WL
     } else if(sl->flash_type == STM32_FLASH_TYPE_WB_WL) {
       uint32_t flash_page = ((flashaddr - STM32_FLASH_BASE) / sl->flash_pgsz);
       stlink_read_debug32(sl, STM32_FLASH_WB_CR, &val);
@@ -1232,6 +1266,8 @@ int32_t stlink_erase_flash_page(stlink_t *sl, stm32_addr_t flashaddr) {
       val |= ((flash_page & 0xFF) << 3);
 
       stlink_write_debug32(sl, STM32_FLASH_WB_CR, val);
+
+    // STM32C0
     } else if(sl->flash_type == STM32_FLASH_TYPE_C0) {
       uint32_t flash_page = ((flashaddr - STM32_FLASH_BASE) / sl->flash_pgsz);
       stlink_read_debug32(sl, STM32_FLASH_C0_CR, &val);
@@ -1246,6 +1282,8 @@ int32_t stlink_erase_flash_page(stlink_t *sl, stm32_addr_t flashaddr) {
     wait_flash_busy(sl);            // wait for the 'busy' bit to clear
     clear_flash_cr_per(sl, BANK_1); // clear the 'enable page erase' bit
     lock_flash(sl);
+
+  // STM32H5
   } else if(sl->flash_type == STM32_FLASH_TYPE_H5) {
     // STM32H5: sector erase via NSCR. SNB selects the 8 KiB sector within the
     // bank, BKSEL the bank (RM0481). 256 sectors total, 128 per bank.
@@ -1279,12 +1317,16 @@ int32_t stlink_erase_flash_page(stlink_t *sl, stm32_addr_t flashaddr) {
     val &= ~(1u << STM32_FLASH_H5_NSCR_SER);
     stlink_write_debug32(sl, STM32_FLASH_H5_NSCR, val);
     lock_flash(sl);
+
+  // STM32WB0
   } else if(sl->flash_type == STM32_FLASH_TYPE_WB0) {
     uint32_t flash_page = ((flashaddr - sl->flash_base) / sl->flash_pgsz);
     stlink_write_debug32(sl, STM32_FLASH_WB0_IRQRAW, STM32_FLASH_WB0_IRQ_ALL);
     stlink_write_debug32(sl, STM32_FLASH_WB0_ADDRESS, (flash_page * sl->flash_pgsz) >> 2);
     stlink_write_debug32(sl, STM32_FLASH_WB0_COMMAND, STM32_FLASH_WB0_CMD_ERASE_PAGE);
     wait_flash_busy(sl);
+
+  // STM32Fx
   } else if(sl->flash_type == STM32_FLASH_TYPE_F0_F1_F3 ||
              sl->flash_type == STM32_FLASH_TYPE_F1_XL) {
     uint32_t bank = (flashaddr < STM32_F1_FLASH_BANK2_BASE) ? BANK_1 : BANK_2;
@@ -1296,6 +1338,8 @@ int32_t stlink_erase_flash_page(stlink_t *sl, stm32_addr_t flashaddr) {
     wait_flash_busy(sl);
     clear_flash_cr_per(sl, bank); // clear the page erase bit
     lock_flash(sl);
+
+  // STM32H7
   } else if(sl->flash_type == STM32_FLASH_TYPE_H7) {
     uint32_t bank = (flashaddr < STM32_H7_FLASH_BANK2_BASE) ? BANK_1 : BANK_2;
     unlock_flash_if(sl); // unlock if locked
@@ -1304,6 +1348,8 @@ int32_t stlink_erase_flash_page(stlink_t *sl, stm32_addr_t flashaddr) {
     set_flash_cr_strt(sl, bank);          // start erase operation
     wait_flash_busy(sl);                  // wait for completion
     lock_flash(sl);
+
+  // Unknown Core-ID
   } else {
     WLOG("unknown coreid %x, page erase failed\n", sl->core_id);
     return (-1);

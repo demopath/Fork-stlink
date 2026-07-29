@@ -1,9 +1,18 @@
+/**
+  ******************************************************************************
+  * @file           : remote.h
+  * @brief          : Remote backend and server dispatch
+  * @copyright      : Copyright (c) 2026 stlink-org. All rights reserved.
+  * @author         : James Walmsley (jameswalmsley)
+  * @date           : 2026-07-27
+  * SPDX-License-Identifier: BSD-3-Clause
+  *
+  * This file is licensed under the BSD 3-Clause License.
+  * See the LICENSE file in the project root for full license information.
+  ******************************************************************************
+  */
+
 /*
- * Copyright (c) 2026 James Walmsley <james@fullfat-fs.co.uk>
- * Use of this source code is governed by a BSD-style license that can be found in the LICENSE file.
- *
- * File: remote.h
- *
  * Remote backend: tunnels the stlink backend operations over TCP so that
  * st-flash / st-info can drive an ST-LINK attached to another machine
  * (the server, st-server). The client runs all the high-level logic

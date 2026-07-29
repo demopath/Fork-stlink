@@ -1,17 +1,25 @@
+/**
+  ******************************************************************************
+  * @file           : remote.c
+  * @brief          : Remote backend and server dispatch
+  * @copyright      : Copyright (c) 2026 stlink-org. All rights reserved.
+  * @author         : James Walmsley (jameswalmsley)
+  * @date           : 2026-07-27
+  * SPDX-License-Identifier: BSD-3-Clause
+  *
+  * This file is licensed under the BSD 3-Clause License.
+  * See the LICENSE file in the project root for full license information.
+  ******************************************************************************
+  */
+
 /*
- * Copyright (c) 2026 James Walmsley <james@fullfat-fs.co.uk>
- * Use of this source code is governed by a BSD-style license that can be found in the LICENSE file.
- *
- * File: remote.c
- *
- * Remote backend + server dispatch. See remote.h.
- *
  * Wire format (all integers little-endian via read_uint32/write_uint32):
+ *
  *   request: [op u32][ap u32][arg0 u32][arg1 u32][payload_len u32][payload...]
  *   reply:   [status u32][ret i32][payload_len u32][payload...]
  *   handshake (server -> client on connect):
- *     [magic][protocol_version][capabilities][stlink_v][jtag_v][swim_v]
- *     [st_vid][stlink_pid][jtag_api][flags][max_trace_freq]
+ *            [magic][protocol_version][capabilities][stlink_v][jtag_v][swim_v]
+ *            [st_vid][stlink_pid][jtag_api][flags][max_trace_freq]
  *
  * Capabilities is reserved for future optional protocol features. Version 1
  * servers send 0 and clients must ignore unknown future capability bits.

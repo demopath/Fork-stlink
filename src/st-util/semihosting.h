@@ -1,8 +1,16 @@
-/*
- * File: semihosting.h
- *
- * Tool: st-util 
- */
+/**
+  ******************************************************************************
+  * @file           : semihosting.h
+  * @brief          : Tool: st-util
+  * @copyright      : Copyright (c) 2026 stlink-org. All rights reserved.
+  * @author         : Fabien-Chouteau (Fabien-Chouteau)
+  * @date           : 2026-07-27
+  * SPDX-License-Identifier: BSD-3-Clause
+  *
+  * This file is licensed under the BSD 3-Clause License.
+  * See the LICENSE file in the project root for full license information.
+  ******************************************************************************
+  */
 
 #ifndef SEMIHOSTING_H
 #define SEMIHOSTING_H
@@ -35,7 +43,7 @@
 #define SEMIHOST_SYS_FLEN     0x0C
 #define SEMIHOST_SYS_TMPNAM   0x0D
 #define SEMIHOST_SYS_REMOVE   0x0E
-#define SEMIHOST_SYS_RENAME   0x0E
+#define SEMIHOST_SYS_RENAME   0x0F
 #define SEMIHOST_SYS_CLOCK    0x10
 #define SEMIHOST_SYS_TIME     0x11
 

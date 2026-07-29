@@ -1,3 +1,11 @@
+/*
+ * File: tests/test_invariant_gdb-server.c
+ *
+ *
+ */
+
+// TODO: CONTENT AND USE OF THIS SOURCE FILE IS TO BE VERIFIED
+
 #include <check.h>
 #include <stdlib.h>
 #include <string.h>

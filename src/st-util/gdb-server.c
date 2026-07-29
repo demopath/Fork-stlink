@@ -1,11 +1,16 @@
-/*
- * Copyright (c) 2011 Peter Zotov <whitequark@whitequark.org>
- * Use of this source code is governed by a BSD-style license that can be found in the LICENSE file.
- *
- * File: gdb-server.c
- *
- * Tool: st-util
- */
+/**
+  ******************************************************************************
+  * @file           : gdb-server.c
+  * @brief          : Tool: st-util
+  * @copyright      : Copyright (c) 2026 stlink-org. All rights reserved.
+  * @author         : Peter Zotov (whitequark)
+  * @date           : 2026-07-27
+  * SPDX-License-Identifier: BSD-3-Clause
+  *
+  * This file is licensed under the BSD 3-Clause License.
+  * See the LICENSE file in the project root for full license information.
+  ******************************************************************************
+  */
 
 #include "gdb-server.h"
 #include "gdb-remote.h"
@@ -1635,7 +1640,11 @@ int32_t serve(stlink_t *sl, st_state_t *st) {
 
             stlink_close(sl);
 
-            sl = stlink_open_usb(st->logging_level, st->connect_mode, st->serialnumber, st->freq);
+            if(st->remote) {
+                sl = stlink_open_remote_str(st->logging_level, st->remote, st->connect_mode, st->freq);
+            } else {
+                sl = stlink_open_usb(st->logging_level, st->connect_mode, st->serialnumber, st->freq);
+            }
             if(sl == NULL || sl->chip_id == STM32_CHIPID_UNKNOWN) { cleanup(0); }
 
             connected_stlink = sl;

@@ -1,8 +1,15 @@
-/*
- * File: map_file.c
- *
- * File mapping
- */
+/**
+  ******************************************************************************
+  * @file           : map_file.c
+  * @brief          : File mapping
+  * @copyright      : Copyright (c) 2026 stlink-org. All rights reserved.
+  * @date           : 2026-07-27
+  * SPDX-License-Identifier: BSD-3-Clause
+  *
+  * This file is licensed under the BSD 3-Clause License.
+  * See the LICENSE file in the project root for full license information.
+  ******************************************************************************
+  */
 
 #include "map_file.h"
 #include "read_write.h"
@@ -14,7 +21,7 @@
 
 // 1 GB max file size
 #ifndef MAX_FILE_SIZE
-#define MAX_FILE_SIZE (1<<20)
+#define MAX_FILE_SIZE (1U<<30)
 #endif
 
 /* Limit the block size to compare to 0x1800 as anything larger will stall the

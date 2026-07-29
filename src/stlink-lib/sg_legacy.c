@@ -1,4 +1,11 @@
-/* == nightwalker-87: TODO: CONTENT AND USE OF THIS SOURCE FILE IS TO BE VERIFIED (07.06.2023) == */
+/*
+ * File: sg_legacy.c
+ *
+ *
+ */
+
+// TODO: CONTENT AND USE OF THIS SOURCE FILE IS TO BE VERIFIED
+// This file should be split up into new or existing modules
 
 /*
  * Copyright (c) 2010 "Capt'ns Missing Link" Authors. All rights reserved.
@@ -74,12 +81,6 @@
  *
  * to your /etc/modprobe.conf or /etc/modprobe.d/local.conf (or add the "quirks=..."
  *         part to an existing options line for usb-storage).
- */
-
-/*
- * File: sg_legacy.c
- *
- *
  */
 
 #define __USE_GNU
