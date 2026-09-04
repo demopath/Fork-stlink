@@ -1,3 +1,11 @@
+/*
+ * File: win32_socket.c
+ *
+ *
+ */
+
+// TODO: CONTENT AND USE OF THIS SOURCE FILE IS TO BE VERIFIED
+
 #if defined(_WIN32)
 
 #include <stdint.h>
@@ -143,7 +151,7 @@ SOCKET win32_socket(int32_t domain, int32_t type, int32_t protocol) {
  * The purpose of this wrapper is to ensure that the global errno symbol is set if an error occurs,
  * even if we are using winsock.
  */
-int32_t win32_connect(SOCKET fd, struct sockaddr *addr, socklen_t addr_len) {
+int32_t win32_connect(SOCKET fd, const struct sockaddr *addr, socklen_t addr_len) {
     int32_t rc = connect(fd, addr, addr_len);
     assert(rc == 0 || rc == SOCKET_ERROR);
 
@@ -317,4 +325,4 @@ int32_t usleep(uint32_t waitTime) {
 }
 #endif
 
-#endif // defined(_WIN32)
+#endif // _WIN32

@@ -1,23 +1,23 @@
-/*
- * File: flash_loader.c
- *
- * Flash loaders
- */
-
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-
-#include <stm32.h>
-#include <stm32_register.h>
-#include <stlink.h>
+/**
+  ******************************************************************************
+  * @file           : flash_loader.c
+  * @brief          : Flash loaders
+  * @copyright      : Copyright (c) 2026 stlink-org. All rights reserved.
+  * @date           : 2026-07-27
+  * SPDX-License-Identifier: BSD-3-Clause
+  *
+  * This file is licensed under the BSD 3-Clause License.
+  * See the LICENSE file in the project root for full license information.
+  ******************************************************************************
+  */
 
 #include "flash_loader.h"
 #include "common_flash.h"
+
 #include "helper.h"
 #include "logging.h"
 #include "read_write.h"
+
 
 #define FLASH_REGS_BANK2_OFS      0x40
 #define FLASH_BANK2_START_ADDR    0x08080000
@@ -125,6 +125,26 @@ static const uint8_t loader_code_stm32f4_lv[] = {
     0x00, 0xbe, 0x00, 0xbf,
     0x00, 0x3c, 0x02, 0x40,
     0x0e, 0x00, 0x00, 0x00
+};
+
+// flashloaders/stm32h5.s -- 128-bit quad-word programming, waits on NSSR BSY
+static const uint8_t loader_code_stm32h5[] = {
+    0xdf, 0xf8, 0x34, 0xc0,
+    0xdf, 0xf8, 0x34, 0xa0,
+    0xe2, 0x44, 0x04, 0x68,
+    0x45, 0x68, 0x86, 0x68,
+    0xc7, 0x68, 0x0c, 0x60,
+    0x4d, 0x60, 0x8e, 0x60,
+    0xcf, 0x60, 0x00, 0xf1,
+    0x10, 0x00, 0x01, 0xf1,
+    0x10, 0x01, 0xbf, 0xf3,
+    0x4f, 0x8f, 0xda, 0xf8,
+    0x00, 0x40, 0x14, 0xf0,
+    0x01, 0x0f, 0xfa, 0xd1,
+    0x10, 0x3a, 0xea, 0xdc,
+    0x00, 0xbe, 0x00, 0xbf,
+    0x00, 0x20, 0x02, 0x40,
+    0x20, 0x00, 0x00, 0x00
 };
 
 // flashloaders/stm32l4.s
@@ -325,6 +345,9 @@ int32_t stlink_flash_loader_write_to_sram(stlink_t *sl, stm32_addr_t* addr, uint
     } else if(sl->flash_type == STM32_FLASH_TYPE_WB0) {
         loader_code = loader_code_stm32wb0;
         loader_size = sizeof(loader_code_stm32wb0);
+    } else if(sl->flash_type == STM32_FLASH_TYPE_H5) {
+        loader_code = loader_code_stm32h5;
+        loader_size = sizeof(loader_code_stm32h5);
     } else if((sl->chip_id == STM32_CHIPID_L4) ||
                (sl->chip_id == STM32_CHIPID_L41x_L42x) ||
                (sl->chip_id == STM32_CHIPID_L43x_L44x) ||
@@ -358,8 +381,9 @@ int32_t stlink_flash_loader_run(stlink_t *sl, flash_loader_t* fl, stm32_addr_t t
     uint32_t dhcsr, dfsr, cfsr, hfsr;
     uint16_t padded_size = size, pad_modulo = 1;
     
-    if(sl->flash_type == STM32_FLASH_TYPE_WB0) {
-        pad_modulo = 16;
+    if(sl->flash_type == STM32_FLASH_TYPE_WB0 ||
+        sl->flash_type == STM32_FLASH_TYPE_H5) {
+        pad_modulo = 16; // H5 programs a 128-bit quad-word at a time
     }
     uint16_t unaligned_cnt = size % pad_modulo;
     if (unaligned_cnt) {
@@ -539,9 +563,12 @@ static void set_flash_cr_pg(stlink_t *sl, uint32_t bank) {
     cr_reg = STM32_FLASH_L4_CR;
     x &= ~STM32_FLASH_L4_CR_OPBITS;
     x |= (1 << STM32_FLASH_L4_CR_PG);
-  } else if(sl->flash_type == STM32_FLASH_TYPE_L5_U5_H5) {
+  } else if(sl->flash_type == STM32_FLASH_TYPE_L5_U5) {
     cr_reg = STM32_FLASH_L5_NSCR;
     x |= (1 << FLASH_CR_PG);
+  } else if(sl->flash_type == STM32_FLASH_TYPE_H5) {
+    cr_reg = STM32_FLASH_H5_NSCR;
+    x |= (1 << STM32_FLASH_H5_NSCR_PG);
   } else if(sl->flash_type == STM32_FLASH_TYPE_G0 ||
              sl->flash_type == STM32_FLASH_TYPE_G4) {
     cr_reg = STM32_FLASH_Gx_CR;
@@ -598,7 +625,7 @@ static void set_dma_state(stlink_t *sl, flash_loader_t *fl, int32_t bckpRstr) {
       rcc_dma_mask = STM32L0_RCC_DMAEN;
     }
     break;
-  case STM32_FLASH_TYPE_L5_U5_H5:
+  case STM32_FLASH_TYPE_L5_U5:
     rcc = STM32L5_RCC_AHB1ENR;
     rcc_dma_mask = STM32L5_RCC_DMAEN;
     break;
@@ -682,12 +709,24 @@ int32_t stlink_flashloader_start(stlink_t *sl, flash_loader_t *fl) {
 
     // set programming mode
     set_flash_cr_pg(sl, BANK_1);
+  } else if(sl->flash_type == STM32_FLASH_TYPE_H5) {
+    ILOG("Starting Flash write for H5\n");
+
+    // H5 programs via an SRAM loader, so it must be staged into SRAM first
+    // (this sets fl->loader_addr / fl->buf_addr used by the loader run).
+    if(stlink_flash_loader_init(sl, fl) == -1) {
+      ELOG("stlink_flash_loader_init() == -1\n");
+      return (-1);
+    }
+
+    unlock_flash_if(sl);         // unlock the flash control register
+    set_flash_cr_pg(sl, BANK_1); // set PG 'allow programming' bit
   } else if(sl->flash_type == STM32_FLASH_TYPE_WB_WL ||
              sl->flash_type == STM32_FLASH_TYPE_G0 ||
              sl->flash_type == STM32_FLASH_TYPE_G4 ||
-             sl->flash_type == STM32_FLASH_TYPE_L5_U5_H5 ||
+             sl->flash_type == STM32_FLASH_TYPE_L5_U5 ||
              sl->flash_type == STM32_FLASH_TYPE_C0) {
-    ILOG("Starting Flash write for WB/G0/G4/L5/U5/H5/C0\n");
+    ILOG("Starting Flash write for WB/G0/G4/L5/U5/C0\n");
 
     unlock_flash_if(sl);         // unlock flash if necessary
     set_flash_cr_pg(sl, BANK_1); // set PG 'allow programming' bit
@@ -780,6 +819,7 @@ int32_t stlink_flashloader_write(stlink_t *sl, flash_loader_t *fl, stm32_addr_t 
   if((sl->flash_type == STM32_FLASH_TYPE_F2_F4) ||
       (sl->flash_type == STM32_FLASH_TYPE_F7) ||
       (sl->flash_type == STM32_FLASH_TYPE_L4) ||
+      (sl->flash_type == STM32_FLASH_TYPE_H5) ||
       (sl->flash_type == STM32_FLASH_TYPE_WB0 && is_exclusively_flash)) {
     uint32_t buf_size = sl->sram_size - 0x1000;
     buf_size = buf_size > 0x8000 ? 0x8000 : buf_size;
@@ -796,10 +836,11 @@ int32_t stlink_flashloader_write(stlink_t *sl, flash_loader_t *fl, stm32_addr_t 
   } else if(sl->flash_type == STM32_FLASH_TYPE_WB_WL ||
              sl->flash_type == STM32_FLASH_TYPE_G0 ||
              sl->flash_type == STM32_FLASH_TYPE_G4 ||
-             sl->flash_type == STM32_FLASH_TYPE_L5_U5_H5 ||
+             sl->flash_type == STM32_FLASH_TYPE_L5_U5 ||
              sl->flash_type == STM32_FLASH_TYPE_C0) {
-  
-    if(sl->flash_type == STM32_FLASH_TYPE_L5_U5_H5 && (len % 16)) {
+
+    // L5/U5 program in 16-byte units.
+    if(sl->flash_type == STM32_FLASH_TYPE_L5_U5 && (len % 16)) {
         WLOG("Aligning data size to 16 bytes\n");
         len += 16 - len % 16;
     }
@@ -838,7 +879,7 @@ int32_t stlink_flashloader_write(stlink_t *sl, flash_loader_t *fl, stm32_addr_t 
       if(stm32l1_write_half_pages(sl, fl, addr, base, len, pagesize)) {
         return (-1);
       } else {
-        off = (uint32_t) (len / pagesize) * pagesize;
+        off = (uint32_t) ((uint64_t) (len / pagesize) * pagesize);
       }
     }
 
@@ -956,7 +997,8 @@ int32_t stlink_flashloader_stop(stlink_t *sl, flash_loader_t *fl) {
       (sl->flash_type == STM32_FLASH_TYPE_G4) ||
       (sl->flash_type == STM32_FLASH_TYPE_H7) ||
       (sl->flash_type == STM32_FLASH_TYPE_L4) ||
-      (sl->flash_type == STM32_FLASH_TYPE_L5_U5_H5) ||
+      (sl->flash_type == STM32_FLASH_TYPE_L5_U5) ||
+      (sl->flash_type == STM32_FLASH_TYPE_H5) ||
       (sl->flash_type == STM32_FLASH_TYPE_WB_WL)) {
 
     clear_flash_cr_pg(sl, BANK_1);

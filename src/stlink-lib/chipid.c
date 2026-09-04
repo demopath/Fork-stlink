@@ -1,22 +1,20 @@
-/*
- * File: chipid.c
- *
- * Chip-ID parametres
- */
+/**
+  ******************************************************************************
+  * @file           : chipid.c
+  * @brief          : Chip-ID parametres
+  * @copyright      : Copyright (c) 2026 stlink-org. All rights reserved.
+  * @date           : 2026-07-27
+  * SPDX-License-Identifier: BSD-3-Clause
+  *
+  * This file is licensed under the BSD 3-Clause License.
+  * See the LICENSE file in the project root for full license information.
+  ******************************************************************************
+  */
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <stm32.h>
-#include <stlink.h>
 #include "chipid.h"
 
 #include "logging.h"
 
-// #include <ctype.h> // TODO: Check use
-// #include <errno.h> // TODO: Check use
 
 static struct stlink_chipid_params *devicelist;
 
@@ -119,12 +117,14 @@ void process_chipfile(char *fname) {
         ts->flash_type = STM32_FLASH_TYPE_L0_L1;
       } else if(strcmp(value, "L4") == 0) {
         ts->flash_type = STM32_FLASH_TYPE_L4;
-      } else if(strcmp(value, "L5_U5_H5") == 0) {
-        ts->flash_type = STM32_FLASH_TYPE_L5_U5_H5;
+      } else if(strcmp(value, "L5_U5") == 0) {
+        ts->flash_type = STM32_FLASH_TYPE_L5_U5;
       } else if(strcmp(value, "WB_WL") == 0) {
         ts->flash_type = STM32_FLASH_TYPE_WB_WL;
       } else if(strcmp(value, "WB0") == 0) {
         ts->flash_type = STM32_FLASH_TYPE_WB0;
+      } else if(strcmp(value, "H5") == 0) {
+        ts->flash_type = STM32_FLASH_TYPE_H5;
       } else {
         ts->flash_type = STM32_FLASH_TYPE_UNKNOWN;
       }
@@ -214,7 +214,7 @@ void process_chipfile(char *fname) {
 
 void init_chipids(char *dir_to_scan) {
   DIR *d;
-  uint32_t nl; // namelen
+  uint64_t nl; // namelen
   struct dirent *dir;
 
   if(!dir_to_scan) {
@@ -252,8 +252,8 @@ void init_chipids(char *dir_to_scan) {
   HANDLE hFind = INVALID_HANDLE_VALUE;
   WIN32_FIND_DATAA ffd;
   char filepath[MAX_PATH] = {0};
-  DWORD filepathlen;
-  int numslash;
+  int32_t filepathlen = 0;
+
   StringCchCopyA(filepath, STLINK_ARRAY_SIZE(filepath), dir_to_scan);
 
   if(FAILED(

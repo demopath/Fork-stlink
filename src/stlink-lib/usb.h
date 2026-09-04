@@ -1,16 +1,46 @@
-/*
- * File: usb.h
- *
- * USB commands & interaction with ST-LINK devices
- */
+/**
+  ******************************************************************************
+  * @file           : usb.h
+  * @brief          : USB commands & interaction with ST-LINK devices
+  * @copyright      : Copyright (c) 2026 stlink-org. All rights reserved.
+  * @date           : 2026-07-27
+  * SPDX-License-Identifier: BSD-3-Clause
+  *
+  * This file is licensed under the BSD 3-Clause License.
+  * See the LICENSE file in the project root for full license information.
+  ******************************************************************************
+  */
 
 #ifndef USB_H
 #define USB_H
 
+#if !defined(_MSC_VER)
+#include <sys/time.h>
+#endif // _MSC_VER
+
+#if defined(_WIN32)
+#include <windows.h>
+#endif // _WIN32
+
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <errno.h>
+#include <limits.h>
+#include <stdbool.h>
+#include <unistd.h>
+#include <pthread.h>
+
+#include <stlink.h>
+#include <stlink_backend.h>
+#include <stlink_cmd.h>
+#include <stm32_register.h>
 
 #include "libusb_settings.h"
 #include "logging.h"
+
 
 #define STLINK_USB_VID_ST                   0x0483
 #define STLINK_USB_PID_STLINK               0x3744
@@ -82,6 +112,7 @@ int32_t _stlink_usb_status_v2(stlink_t *sl);
 int32_t _stlink_usb_status(stlink_t * sl);
 int32_t _stlink_usb_force_debug(stlink_t *sl);
 int32_t _stlink_usb_enter_swd_mode(stlink_t * sl);
+int32_t _stlink_usb_init_ap(stlink_t * sl, uint8_t ap);
 int32_t _stlink_usb_exit_dfu_mode(stlink_t* sl);
 int32_t _stlink_usb_reset(stlink_t * sl);
 int32_t _stlink_usb_jtag_reset(stlink_t * sl, int32_t value);

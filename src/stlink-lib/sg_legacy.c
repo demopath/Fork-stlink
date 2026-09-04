@@ -1,4 +1,11 @@
-/* == nightwalker-87: TODO: CONTENT AND USE OF THIS SOURCE FILE IS TO BE VERIFIED (07.06.2023) == */
+/*
+ * File: sg_legacy.c
+ *
+ *
+ */
+
+// TODO: CONTENT AND USE OF THIS SOURCE FILE IS TO BE VERIFIED
+// This file should be split up into new or existing modules
 
 /*
  * Copyright (c) 2010 "Capt'ns Missing Link" Authors. All rights reserved.
@@ -76,31 +83,14 @@
  *         part to an existing options line for usb-storage).
  */
 
-/*
- * File: sg_legacy.c
- *
- *
- */
-
 #define __USE_GNU
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-// #include <sys/types.h> // TODO: Check use
-
-#include <stlink.h>
-#include <stlink_backend.h>
-#include <stlink_cmd.h>
-#include <stm32_register.h>
-
 #include "sg_legacy.h"
+
 #include "logging.h"
 #include "read_write.h"
 #include "usb.h"
-// #include <stlink.h>    // TODO: Check use
+
 
 #define STLINK_OK    0x80
 #define STLINK_FALSE 0x81
@@ -965,6 +955,7 @@ static stlink_backend_t _stlink_sg_backend = {
     NULL,                   // trace_enable
     NULL,                   // trace_disable
     NULL,                   // trace_read
+    NULL,                   // init_ap (unsupported on legacy SCSI backend)
 };
 
 static stlink_t* stlink_open(const int32_t verbose) {

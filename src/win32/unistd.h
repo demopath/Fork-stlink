@@ -1,3 +1,11 @@
+/*
+ * File: unistd.h
+ *
+ *
+ */
+
+// TODO: CONTENT AND USE OF THIS SOURCE FILE IS TO BE VERIFIED
+
 #ifndef UNISTD_H
 #define UNISTD_H
 
@@ -51,26 +59,26 @@
  * You need to look at your app and consider whether to call e.g. closesocket().
  */
 
-#define ssize_t int
-#ifndef SSIZE_MAX
-#define SSIZE_MAX ((sizeof(ssize_t) == 4) ? 2147483647 : 9223372036854775807)
-#endif
+// #define ssize_t int
+// #ifndef SSIZE_MAX
+// #define SSIZE_MAX ((sizeof(ssize_t) == 4) ? 2147483647 : 9223372036854775807)
+// #endif
 
 #define STDIN_FILENO  0
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
 // should be in some equivalent to <sys/types.h>
-typedef __int8 int8_t;
-typedef __int16 int16_t;
-typedef __int32 int32_t;
-typedef __int64 int64_t;
-typedef unsigned __int8 uint8_t;
-typedef unsigned __int16 uint16_t;
-typedef unsigned __int32 uint32_t;
-typedef unsigned __int64 uint64_t;
+// typedef __int8 int8_t;
+// typedef __int16 int16_t;
+// typedef __int32 int32_t;
+// typedef __int64 int64_t;
+// typedef unsigned __int8 uint8_t;
+// typedef unsigned __int16 uint16_t;
+// typedef unsigned __int32 uint32_t;
+// typedef unsigned __int64 uint64_t;
 
-#ifndef STLINK_HAVE_UNISTD_H
+//#ifndef STLINK_HAVE_UNISTD_H
 int32_t usleep(uint32_t waitTime);
-#endif
+//#endif
 
 #endif // UNISTD_H

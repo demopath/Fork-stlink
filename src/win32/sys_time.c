@@ -1,3 +1,11 @@
+/*
+ * File: sys_time.c
+ *
+ *
+ */
+
+// TODO: CONTENT AND USE OF THIS SOURCE FILE IS TO BE VERIFIED
+
 #include <stdint.h>
 
 #include "sys_time.h"
@@ -6,7 +14,7 @@
 
 #include <time.h>
 
-/* Simple gettimeofday implementation without converting Windows time to Linux time */
+/* Simple gettimeofday implementation */
 int32_t gettimeofday(struct timeval *tv, struct timezone *tz) {
     FILETIME ftime;
     ULARGE_INTEGER ulint;
@@ -17,8 +25,10 @@ int32_t gettimeofday(struct timeval *tv, struct timezone *tz) {
         ulint.LowPart = ftime.dwLowDateTime;
         ulint.HighPart = ftime.dwHighDateTime;
 
-        tv->tv_sec = (int32_t) (ulint.QuadPart / 10000000L);
-        tv->tv_usec = (int32_t) (ulint.QuadPart % 10000000L);
+        ulint.QuadPart -= 116444736000000000LL; // shift base to unix epoch
+        ulint.QuadPart /= 10LL; // 100ns ticks to microseconds
+        tv->tv_sec = (int32_t) (ulint.QuadPart / 1000000LL);
+        tv->tv_usec = (int32_t) (ulint.QuadPart % 1000000LL);
     }
 
     if(NULL != tz) {
@@ -33,4 +43,4 @@ int32_t gettimeofday(struct timeval *tv, struct timezone *tz) {
     return 0;
 }
 
-#endif //STLINK_HAVE_SYS_TIME_H
+#endif // STLINK_HAVE_SYS_TIME_H

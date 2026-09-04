@@ -1,33 +1,19 @@
-/*
- * File: flash.c
- *
- * Tool st-flash - Simple wrapper around the stlink_flash_write function
- */
+/**
+  ******************************************************************************
+  * @file           : flash.c
+  * @brief          : Tool: st-flash
+  * @copyright      : Copyright (c) 2026 stlink-org. All rights reserved.
+  * @date           : 2026-07-27
+  * SPDX-License-Identifier: BSD-3-Clause
+  *
+  * This file is licensed under the BSD 3-Clause License.
+  * See the LICENSE file in the project root for full license information.
+  ******************************************************************************
+  */
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <fcntl.h>
-#include <signal.h>
-
-#if defined(_WIN32)
-#include <win32_socket.h>
-#else
-#include <unistd.h>
-#endif // _WIN32
-
-#include <stm32.h>
-#include <stlink.h>
 #include "flash.h"
 #include "flash_opts.h"
 
-#include <chipid.h>
-#include <common_flash.h>
-#include <map_file.h>
-#include <option_bytes.h>
-#include <usb.h>
 
 static stlink_t *connected_stlink = NULL;
 
@@ -103,7 +89,11 @@ int32_t main(int32_t ac, char** av) {
     printf("st-flash %s\n", STLINK_VERSION);
     init_chipids (STLINK_CHIPS_DIR);
 
-    sl = stlink_open_usb(o.log_level, o.connect, (char *)o.serial, o.freq);
+    if(o.remote) {
+        sl = stlink_open_remote_str(o.log_level, o.remote, o.connect, o.freq);
+    } else {
+        sl = stlink_open_usb(o.log_level, o.connect, (char *)o.serial, o.freq);
+    }
 
     if(sl == NULL) { return (-1); }
 

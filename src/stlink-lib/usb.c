@@ -1,35 +1,21 @@
-/*
- * File: usb.c
- *
- * USB commands & interaction with ST-LINK devices
- */
+/**
+  ******************************************************************************
+  * @file           : usb.c
+  * @brief          : USB commands & interaction with ST-LINK devices
+  * @copyright      : Copyright (c) 2026 stlink-org. All rights reserved.
+  * @date           : 2026-07-27
+  * SPDX-License-Identifier: BSD-3-Clause
+  *
+  * This file is licensed under the BSD 3-Clause License.
+  * See the LICENSE file in the project root for full license information.
+  ******************************************************************************
+  */
 
-#if !defined(_MSC_VER)
-#include <sys/time.h>
-#endif // _MSC_VER
-
-#if defined(_WIN32)
-#include <win32_socket.h>
-#endif // _WIN32
-
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <errno.h>
-#include <limits.h>
-#include <stdbool.h>
-#include <unistd.h>
-
-#include <stlink.h>
-#include <stlink_backend.h>
-#include <stlink_cmd.h>
-#include <stm32_register.h>
+#include "usb.h"
 
 #include "logging.h"
 #include "read_write.h"
-#include "usb.h"
+
 
 static inline uint32_t le_to_h_u32(const uint8_t* buf) {
     return ((uint32_t) ((uint32_t) buf[0] | (uint32_t) buf[1] << 8 | (uint32_t) buf[2] << 16 | (uint32_t) buf[3] << 24));
@@ -256,6 +242,15 @@ int32_t _stlink_usb_read_debug32(stlink_t *sl, uint32_t addr, uint32_t *data) {
     ssize_t size;
     const int32_t rep_len = 8;
 
+    // On targets that live on a non-default AP (e.g. STM32H5 on AP1) the native
+    // READDEBUGREG path does not honour the selected AP. The debug registers are
+    // memory-mapped in the PPB, so route the access through the MEM-AP instead.
+    if (sl->ap) {
+        if (_stlink_usb_read_mem32(sl, addr, 4) != 0) { return (-1); }
+        *data = read_uint32(sl->q_buf, 0);
+        return (0);
+    }
+
     int32_t i = fill_command(sl, SG_DXFER_FROM_DEV, rep_len);
     cmd[i++] = STLINK_DEBUG_COMMAND;
     cmd[i++] = STLINK_DEBUG_APIV2_READDEBUGREG;
@@ -277,6 +272,12 @@ int32_t _stlink_usb_write_debug32(stlink_t *sl, uint32_t addr, uint32_t data) {
     unsigned char* const cmd  = sl->c_buf;
     ssize_t size;
     const int32_t rep_len = 2;
+
+    // See _stlink_usb_read_debug32: route via the MEM-AP when not on AP0.
+    if (sl->ap) {
+        write_uint32(sl->q_buf, data);
+        return (_stlink_usb_write_mem32(sl, addr, 4));
+    }
 
     int32_t i = fill_command(sl, SG_DXFER_FROM_DEV, rep_len);
     cmd[i++] = STLINK_DEBUG_COMMAND;
@@ -322,6 +323,7 @@ int32_t _stlink_usb_write_mem32(stlink_t *sl, uint32_t addr, uint16_t len) {
     cmd[i++] = STLINK_DEBUG_WRITEMEM_32BIT;
     write_uint32(&cmd[i], addr);
     write_uint16(&cmd[i + 4], len);
+    cmd[i + 6] = sl->ap; // access port selector (0 = AP0)
     ret = send_only(slu, 0, cmd, slu->cmd_len, "WRITEMEM_32BIT");
 
     if(ret == -1) { return (ret); }
@@ -350,6 +352,7 @@ int32_t _stlink_usb_write_mem8(stlink_t *sl, uint32_t addr, uint16_t len) {
     cmd[i++] = STLINK_DEBUG_WRITEMEM_8BIT;
     write_uint32(&cmd[i], addr);
     write_uint16(&cmd[i + 4], len);
+    cmd[i + 6] = sl->ap; // access port selector (0 = AP0)
     ret = send_only(slu, 0, cmd, slu->cmd_len, "WRITEMEM_8BIT");
 
     if(ret == -1) { return (ret); }
@@ -504,6 +507,24 @@ int32_t _stlink_usb_enter_swd_mode(stlink_t * sl) {
 
     cmd[i++] = STLINK_DEBUG_ENTER_SWD;
     size = send_recv(slu, 1, cmd, slu->cmd_len, data, rep_len, CMD_CHECK_RETRY, "ENTER_SWD");
+
+    return (size < 0 ? -1 : 0);
+}
+
+// Select and initialise an access port (MEM-AP). Required for targets whose
+// debug/memory access is not on the default AP0 (e.g. STM32H5 uses AP1).
+int32_t _stlink_usb_init_ap(stlink_t * sl, uint8_t ap) {
+    struct stlink_libusb * const slu = sl->backend_data;
+    unsigned char* const cmd  = sl->c_buf;
+    unsigned char* const data = sl->q_buf;
+    ssize_t size;
+    const uint32_t rep_len = 2;
+    int32_t i = fill_command(sl, SG_DXFER_FROM_DEV, rep_len);
+
+    cmd[i++] = STLINK_DEBUG_COMMAND;
+    cmd[i++] = STLINK_DEBUG_APIV2_INIT_AP;
+    cmd[i++] = ap;
+    size = send_recv(slu, 1, cmd, slu->cmd_len, data, rep_len, CMD_CHECK_RETRY, "INIT_AP");
 
     return (size < 0 ? -1 : 0);
 }
@@ -733,6 +754,7 @@ int32_t _stlink_usb_read_mem32(stlink_t *sl, uint32_t addr, uint16_t len) {
     cmd[i++] = STLINK_DEBUG_READMEM_32BIT;
     write_uint32(&cmd[i], addr);
     write_uint16(&cmd[i + 4], len);
+    cmd[i + 6] = sl->ap; // access port selector (0 = AP0)
     size = send_recv(slu, 1, cmd, slu->cmd_len, data, len, CMD_CHECK_NO, "READMEM_32BIT");
 
     if(size < 0) {
@@ -764,6 +786,7 @@ int32_t _stlink_usb_read_all_regs(stlink_t *sl, struct stlink_reg *regp) {
         cmd[i++] = STLINK_DEBUG_APIV2_READALLREGS;
     }
 
+    cmd[i] = sl->ap; // access port selector (0 = AP0)
     size = send_recv(slu, 1, cmd, slu->cmd_len, data, rep_len, CMD_CHECK_STATUS, "READALLREGS");
 
     if(size < 0) {
@@ -817,6 +840,7 @@ int32_t _stlink_usb_read_reg(stlink_t *sl, int32_t r_idx, struct stlink_reg *reg
     }
 
     cmd[i++] = (uint8_t) r_idx;
+    cmd[i] = sl->ap; // access port selector, after the register index (0 = AP0)
     size = send_recv(slu, 1, cmd, slu->cmd_len, data, rep_len, CMD_CHECK_RETRY, "READREG");
 
     if(size < 0) {
@@ -986,6 +1010,7 @@ int32_t _stlink_usb_write_reg(stlink_t *sl, uint32_t reg, int32_t idx) {
 
     cmd[i++] = idx;
     write_uint32(&cmd[i], reg);
+    cmd[i + 4] = sl->ap; // access port selector, after the register data (0 = AP0)
     size = send_recv(slu, 1, cmd, slu->cmd_len, data, rep_len, CMD_CHECK_RETRY, "WRITEREG");
 
     return (size < 0 ? -1 : 0);
@@ -1100,8 +1125,24 @@ static stlink_backend_t _stlink_usb_backend = {
     _stlink_usb_set_swdclk,
     _stlink_usb_enable_trace,
     _stlink_usb_disable_trace,
-    _stlink_usb_read_trace
+    _stlink_usb_read_trace,
+    _stlink_usb_init_ap
 };
+
+/* Argument structure for threaded probing */
+struct stlink_probe_arg {
+    char serial[STLINK_SERIAL_BUFFER_SIZE];
+    enum connect_type connect;
+    int32_t freq;
+    stlink_t *res;
+};
+
+/* Worker invoked by each thread to open a device by serial */
+static void *stlink_probe_worker(void *varg) {
+    struct stlink_probe_arg *arg = (struct stlink_probe_arg *)varg;
+    arg->res = stlink_open_usb(0, arg->connect, arg->serial, arg->freq);
+    return NULL;
+}
 
 /* return the length of serial or (0) in case of errors */
 uint32_t stlink_serial(struct libusb_device_handle *handle, struct libusb_device_descriptor *desc, char *serial) {
@@ -1192,7 +1233,7 @@ stlink_t *stlink_open_usb(enum ugly_loglevel verbose, enum connect_type connect,
 
         if(ret) { continue; } // could not open device
 
-        uint32_t serial_len = stlink_serial(handle, &desc, sl->serial);
+        uint64_t serial_len = stlink_serial(handle, &desc, sl->serial);
 
         libusb_close(handle);
 
@@ -1367,8 +1408,20 @@ static uint32_t stlink_probe_usb_devs(libusb_device **devs, stlink_t **sldevs[],
         return (0);
     }
 
-    /* Open STLINKS and attach them to list */
+    /* Collect serials for all devices to probe */
+    struct stlink_probe_arg *args = calloc(slcnt, sizeof(*args));
+    pthread_t *threads = calloc(slcnt, sizeof(*threads));
+
+    if(!args || !threads) {
+        free(_sldevs);
+        free(args);
+        free(threads);
+        *sldevs = NULL;
+        return 0;
+    }
+
     i = 0;
+    uint32_t job_idx = 0;
 
     while ((dev = devs[i++]) != NULL) {
         struct libusb_device_descriptor desc;
@@ -1379,6 +1432,7 @@ static uint32_t stlink_probe_usb_devs(libusb_device **devs, stlink_t **sldevs[],
             break;
         }
 
+        if(desc.idVendor != STLINK_USB_VID_ST) { continue; }
         if(!STLINK_SUPPORTED_USB_PID(desc.idProduct)) { continue; }
 
         struct libusb_device_handle* handle;
@@ -1393,25 +1447,45 @@ static uint32_t stlink_probe_usb_devs(libusb_device **devs, stlink_t **sldevs[],
                 ELOG("Failed to open USB device %#06x:%#06x, libusb error: %d)\n", desc.idVendor, desc.idProduct, ret);
             }
 
-            break;
+            continue;
         }
 
-        uint32_t serial_len = stlink_serial(handle, &desc, serial);
+        uint64_t serial_len = stlink_serial(handle, &desc, serial);
 
         libusb_close(handle);
 
         if(serial_len != STLINK_SERIAL_LENGTH) { continue; }
 
-        stlink_t *sl = stlink_open_usb(0, connect, serial, freq);
+        /* prepare thread args */
+        snprintf(args[job_idx].serial, STLINK_SERIAL_BUFFER_SIZE, "%s", serial);
+        args[job_idx].connect = connect;
+        args[job_idx].freq = freq;
+        args[job_idx].res = NULL;
 
-        if(!sl) {
-            ELOG("Failed to open USB device %#06x:%#06x\n", desc.idVendor, desc.idProduct);
+        /* spawn worker thread */
+        int rc = pthread_create(&threads[job_idx], NULL, stlink_probe_worker, &args[job_idx]);
+        if(rc != 0) {
+            ELOG("Failed to create probe thread: %s\n", strerror(rc));
+            args[job_idx].res = NULL;
+            /* do not increment job_idx in this case, but continue scanning */
             continue;
         }
 
-        _sldevs[slcur++] = sl;
+        job_idx++;
     }
 
+    /* Join threads and collect successful opens */
+    for(uint32_t n = 0; n < job_idx; n++) {
+        pthread_join(threads[n], NULL);
+        if(args[n].res) {
+            _sldevs[slcur++] = args[n].res;
+        } else {
+            ELOG("Failed to open device %s\n", args[n].serial);
+        }
+    }
+
+    free(args);
+    free(threads);
     *sldevs = _sldevs;
 
     return (slcur);

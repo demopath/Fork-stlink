@@ -1,52 +1,12 @@
 # Compiling from sources
 
-
-## Microsoft Windows - MINGW (10, 11)
-
-### Common Requirements
-
-On Windows users should ensure that the following software is installed:
-
-- `git` (_optional, but recommended_)
-- `7zip`
-- `MSYS2`
-
-### Installation
-
-1. Install `MSYS2` from <https://www.msys2.org/><br />
-   Follow the installation instructions on the website.
-2. Install `mingw-w64` via the MSYS2 UCRT64 Shell: `pacman -S mingw-w64-x86_64-cmake mingw-w64-x86_64-make mingw-w64-x86_64-gcc git`
-3. Fetch the project sourcefiles by running `git clone https://github.com/stlink-org/stlink.git`from the command-line (cmd.exe)<br />
-   or download and extract (`7zip`) the stlink zip-sourcefolder from the Release page on GitHub.
-
-### Building
-
-1. Open the command-line (cmd.exe) with administrator privileges
-2. Move to the `stlink` directory and execute `C:\$Path-to-your-stlink-folder$\mingw64-build.bat`
-
-Depending on the flavour of compilation the final executables will be placed in the following directories:
-- Local compilation: `<project_root>\build-mingw\bin`
-- Local installation: `C:\Program Files (x86)\stlink\bin`
-- Package Generation (portable): `C:\Users\swift\Desktop\stlink\build-mingw\dist`
-
-#### Removal:
-
-Remove `C:\Program Files (x86)\stlink\` and `C:\$Path-to-your-stlink-folder$`.
-
-
-**NOTE:**
-
-[ST-LINK drivers](https://www.st.com/en/development-tools/stsw-link009.html) are required for programmers to work with `stlink`.
-
-
-## Microsoft Windows - MSVC (10, 11)
+## Microsoft Windows - MSVC
 
 ### Common Requirements
 
 On Windows users should ensure that the following software is installed:
 
 - `git` (Required for building LibUSB if missing)
-- `7zip`
 - `cmake`
 - `MSVC` Compiler (Tested with Visual Studio 2022 and Build Tools for Visual Studio 2022)
 
@@ -88,18 +48,14 @@ On Windows users should ensure that the following software is installed:
 Install the following packages from your package repository:
 
 - `git`
-- `gcc` or `clang` or `mingw32-gcc` or `mingw64-gcc` (C-compiler; very likely gcc is already present)
-- `build-essential` (on Debian based distros (Debian, Ubuntu))
-- `cmake`
-- `rpm` (on Debian based distros (Debian, Ubuntu), needed for package build with `make package`)
-- `libusb-1.0-0`
-- `libusb-1.0-0-dev` (development headers for building)
+- `gcc` and `g++` or `clang` (C-compiler)
+- `make` (Build tool)
+- `build-essential` (_recommended_, on Debian based distros, contains `gcc`, `g++`, `libc6-dev`, `make`)
+- `cmake` (Software development tool)
+- `libusb-1.0-0` and `libusb-1.0-0-dev` (libusb and related development headers)
 - `libgtk-3-dev` (_optional_, needed for `stlink-gui`)
+- `rpm` (on Debian based distros, needed for package build with `make package`)
 - `pandoc` (_optional_, needed for generating manpages from markdown)
-
-or execute (Debian-based systems only): `apt-get install gcc build-essential cmake rpm libusb-1.0-0 libusb-1.0-0-dev libgtk-3-dev pandoc`
-
-(Replace gcc with the intended C-compiler if necessary or leave out any optional package not needed.)
 
 ### Installation
 
@@ -132,15 +88,12 @@ As an option you may also install to an individual user-defined folder e.g `$HOM
 
 Install the following packages from your package repository:
 
-- `mingw-w64`
-- `mingw-w64-common`
-- `mingw-w64-i686-dev`
-- `mingw-w64-x86-64-dev`
+- `mingw-w64`, `autotools-dev` and `libtool`
 
 After following the steps for installation above, proceed with from the build dircetory itself:
 
 ```sh
-$ sudo sh ./cmake/packaging/windows/generate_binaries.sh
+$ sudo sh ./gen_binaries_win.sh
 ```
 
 The generated zip-packages can be found in the subdirectory `./build/dist`.

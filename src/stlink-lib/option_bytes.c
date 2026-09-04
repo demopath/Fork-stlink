@@ -1,14 +1,16 @@
-/*
- * File: option_bytes.c
- *
- * Read and write option bytes and option control registers
- */
+/**
+  ******************************************************************************
+  * @file           : option_bytes.c
+  * @brief          : Read and write option bytes and option control registers
+  * @copyright      : Copyright (c) 2026 stlink-org. All rights reserved.
+  * @date           : 2026-07-27
+  * SPDX-License-Identifier: BSD-3-Clause
+  *
+  * This file is licensed under the BSD 3-Clause License.
+  * See the LICENSE file in the project root for full license information.
+  ******************************************************************************
+  */
 
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-
-#include <stlink.h>
 #include "option_bytes.h"
 
 #include "common_flash.h"
@@ -17,6 +19,7 @@
 #include "map_file.h"
 #include "md5.h"
 #include "read_write.h"
+
 
 /**
  * Read option control register C0
@@ -758,6 +761,58 @@ static int32_t stlink_write_option_bytes_wb(stlink_t *sl, stm32_addr_t addr, uin
 }
 
 /**
+ * Write option bytes L5
+ * @param sl
+ * @param addr of the memory mapped option bytes
+ * @param base option bytes
+ * @param len of option bytes
+ * @return 0 on success, -ve on failure.
+ */
+static int32_t stlink_write_option_bytes_l5(stlink_t *sl, stm32_addr_t addr,
+                                            uint8_t *base, uint32_t len) {
+  /* Write options bytes */
+  uint32_t val;
+  int32_t ret = 0;
+  (void)len;
+  uint32_t data;
+
+  clear_flash_error(sl);
+
+  while (len != 0) {
+    write_uint32((unsigned char *)&data,
+                 *(uint32_t *)(base)); // write options bytes
+
+    WLOG("Writing option bytes %#10x to %#10x\n", data, addr);
+    stlink_write_debug32(sl, addr, data);
+    wait_flash_busy(sl);
+
+    if ((ret = check_flash_error(sl))) {
+      break;
+    }
+
+    len -= 4;
+    addr += 4;
+    base += 4;
+  }
+
+  // Set Options Start bit
+  stlink_read_debug32(sl, STM32_FLASH_L5_NSCR, &val);
+  val |= (1 << STM32_FLASH_L5_NSCR_NSOPTSTRT);
+  stlink_write_debug32(sl, STM32_FLASH_L5_NSCR, val);
+
+  wait_flash_busy(sl);
+
+  ret = check_flash_error(sl);
+
+  // Reload options
+  stlink_read_debug32(sl, STM32_FLASH_L5_NSCR, &val);
+  val |= (1 << STM32_FLASH_L5_NSCR_OBL_LAUNCH);
+  stlink_write_debug32(sl, STM32_FLASH_L5_NSCR, val);
+
+  return (ret);
+}
+
+/**
  * Read option control register WB
  * @param sl
  * @param option_byte
@@ -879,6 +934,9 @@ int32_t stlink_write_option_bytes(stlink_t *sl, stm32_addr_t addr, uint8_t *base
     break;
   case STM32_FLASH_TYPE_WB_WL:
     ret = stlink_write_option_bytes_wb(sl, addr, base, len);
+    break;
+  case STM32_FLASH_TYPE_L5_U5:
+    ret = stlink_write_option_bytes_l5(sl, addr, base, len);
     break;
   default:
     ELOG("Option bytes writing is currently not implemented for connected chip\n");

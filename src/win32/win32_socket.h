@@ -1,3 +1,11 @@
+/*
+ * File: win32_socket.h
+ *
+ *
+ */
+
+// TODO: CONTENT AND USE OF THIS SOURCE FILE IS TO BE VERIFIED
+
 #if defined(_WIN32)
 
 #include <stdint.h>
@@ -11,6 +19,7 @@
 
 #include <io.h>
 #include <winsock2.h>
+#include <ws2tcpip.h>
 
 #if defined(_MSC_VER)
 #pragma comment(lib, "ws2_32.lib")
@@ -61,7 +70,7 @@ typedef int32_t socklen_t;
 
 int32_t win32_poll(struct pollfd *, uint32_t, int32_t);
 SOCKET  win32_socket(int32_t, int32_t, int32_t);
-int32_t win32_connect(SOCKET, struct sockaddr*, socklen_t);
+int32_t win32_connect(SOCKET, const struct sockaddr*, socklen_t);
 SOCKET  win32_accept(SOCKET, struct sockaddr*, socklen_t *);
 int32_t win32_shutdown(SOCKET, int32_t);
 int32_t win32_close_socket(SOCKET fd);

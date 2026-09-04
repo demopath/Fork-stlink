@@ -1,3 +1,16 @@
+/**
+  ******************************************************************************
+  * @file           : memory-map.h
+  * @brief          : Tool: st-util
+  * @copyright      : Copyright (c) 2026 stlink-org. All rights reserved.
+  * @date           : 2026-07-27
+  * SPDX-License-Identifier: BSD-3-Clause
+  *
+  * This file is licensed under the BSD 3-Clause License.
+  * See the LICENSE file in the project root for full license information.
+  ******************************************************************************
+  */
+
 #ifndef MEMORY_MAP_H
 #define MEMORY_MAP_H
 

@@ -1,88 +1,19 @@
-#include <ctype.h>
-#include <getopt.h>
-#include <signal.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <time.h>
-#include <unistd.h>
+/**
+  ******************************************************************************
+  * @file           : trace.c
+  * @brief          : Tool: st-trace
+  * @copyright      : Copyright (c) 2026 stlink-org. All rights reserved.
+  * @author         : John Hall (simplerobot)
+  * @date           : 2026-07-27
+  * SPDX-License-Identifier: BSD-3-Clause
+  *
+  * This file is licensed under the BSD 3-Clause License.
+  * See the LICENSE file in the project root for full license information.
+  ******************************************************************************
+  */
 
-#include <stlink.h>
-#include <stlink_backend.h>
-#include <stm32_register.h>
+#include "trace.h"
 
-#include <chipid.h>
-#include <logging.h>
-#include <read_write.h>
-#include <usb.h>
-
-#define DEFAULT_LOGGING_LEVEL 50
-#define DEBUG_LOGGING_LEVEL 100
-
-#define APP_RESULT_SUCCESS 0
-#define APP_RESULT_INVALID_PARAMS 1
-#define APP_RESULT_STLINK_NOT_FOUND 2
-#define APP_RESULT_STLINK_MISSING_DEVICE 3
-#define APP_RESULT_STLINK_UNSUPPORTED_DEVICE 4
-#define APP_RESULT_STLINK_UNSUPPORTED_LINK 5
-#define APP_RESULT_UNSUPPORTED_TRACE_FREQUENCY 6
-#define APP_RESULT_STLINK_STATE_ERROR 7
-
-// See D4.2 of https://developer.arm.com/documentation/ddi0403/ed/
-#define TRACE_OP_IS_OVERFLOW(c) ((c) == 0x70)
-#define TRACE_OP_IS_LOCAL_TIME(c) (((c)&0x0f) == 0x00 && ((c)&0x70) != 0x00)
-#define TRACE_OP_IS_EXTENSION(c) (((c)&0x0b) == 0x08)
-#define TRACE_OP_IS_GLOBAL_TIME(c) (((c)&0xdf) == 0x94)
-#define TRACE_OP_IS_SOURCE(c) (((c)&0x03) != 0x00)
-#define TRACE_OP_IS_SW_SOURCE(c) (((c)&0x03) != 0x00 && ((c)&0x04) == 0x00)
-#define TRACE_OP_IS_HW_SOURCE(c) (((c)&0x03) != 0x00 && ((c)&0x04) == 0x04)
-#define TRACE_OP_IS_TARGET_SOURCE(c) ((c) == 0x01)
-#define TRACE_OP_GET_CONTINUATION(c) ((c)&0x80)
-#define TRACE_OP_GET_SOURCE_SIZE(c) ((c)&0x03)
-#define TRACE_OP_GET_SW_SOURCE_ADDR(c) ((c) >> 3)
-
-typedef struct {
-  bool show_help;
-  bool show_version;
-  int32_t logging_level;
-  uint32_t core_frequency;
-  uint32_t trace_frequency;
-  bool reset_board;
-  bool force;
-  char *serial_number;
-} st_settings_t;
-
-// We use a simple state machine to parse the trace data.
-typedef enum {
-  TRACE_STATE_UNKNOWN,
-  TRACE_STATE_IDLE,
-  TRACE_STATE_TARGET_SOURCE,
-  TRACE_STATE_SKIP_FRAME,
-  TRACE_STATE_SKIP_4,
-  TRACE_STATE_SKIP_3,
-  TRACE_STATE_SKIP_2,
-  TRACE_STATE_SKIP_1,
-} trace_state;
-
-typedef struct {
-  time_t start_time;
-  bool configuration_checked;
-
-  trace_state state;
-
-  uint32_t count_raw_bytes;
-  uint32_t count_target_data;
-  uint32_t count_time_packets;
-  uint32_t count_hw_overflow;
-  uint32_t count_sw_overflow;
-  uint32_t count_error;
-
-  uint8_t unknown_opcodes[256 / 8];
-  uint32_t unknown_sources;
-} st_trace_t;
 
 // We use a global flag to allow communicating to the main thread from the
 // signal handler.
@@ -124,6 +55,7 @@ static void usage(void) {
   puts("                        k=kHz, m=MHz, or g=GHz (eg. --trace=2m)");
   puts("  -n, --no-reset        Do not reset board on connection");
   puts("  -sXX, --serial=XX     Use a specific serial number");
+  puts("  --remote=HOST[:PORT]  Drive an ST-LINK served by st-server (best-effort on low-latency links)");
   puts("  -f, --force           Ignore most initialization errors");
 }
 
@@ -174,6 +106,7 @@ bool parse_options(int32_t argc, char **argv, st_settings_t *settings) {
       {"no-reset", no_argument, NULL, 'n'},
       {"serial", required_argument, NULL, 's'},
       {"force", no_argument, NULL, 'f'},
+      {"remote", required_argument, NULL, REMOTE_OPTION},
       {0, 0, 0, 0},
   };
   int32_t option_index = 0;
@@ -188,6 +121,7 @@ bool parse_options(int32_t argc, char **argv, st_settings_t *settings) {
   settings->reset_board = true;
   settings->force = false;
   settings->serial_number = NULL;
+  settings->remote = NULL;
   ugly_init(settings->logging_level);
 
   while ((c = getopt_long(argc, argv, "hVv::c:ns:f", long_options, &option_index)) != -1) {
@@ -221,6 +155,9 @@ bool parse_options(int32_t argc, char **argv, st_settings_t *settings) {
     case 's':
       settings->serial_number = optarg;
       break;
+    case REMOTE_OPTION:
+      settings->remote = optarg;
+      break;
     case '?':
       error = true;
       break;
@@ -244,6 +181,9 @@ bool parse_options(int32_t argc, char **argv, st_settings_t *settings) {
 }
 
 static stlink_t *stlink_connect(const st_settings_t *settings) {
+  if(settings->remote) {
+    return stlink_open_remote_str(settings->logging_level, settings->remote, CONNECT_HOT_PLUG, 0);
+  }
   return stlink_open_usb(settings->logging_level, false, settings->serial_number, 0);
 }
 

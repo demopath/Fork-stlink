@@ -1,23 +1,22 @@
-/*
- * File: flash_opts.c
- *
- * Flash Options
- */
+/**
+  ******************************************************************************
+  * @file           : flash_opts.c
+  * @brief          : Tool: st-flash - Flash Options
+  * @copyright      : Copyright (c) 2026 stlink-org. All rights reserved.
+  * @date           : 2026-07-27
+  * SPDX-License-Identifier: BSD-3-Clause
+  *
+  * This file is licensed under the BSD 3-Clause License.
+  * See the LICENSE file in the project root for full license information.
+  ******************************************************************************
+  */
 
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <stm32.h>
-#include <stlink.h>
-#include "flash_opts.h"
 #include "flash.h"
+#include "flash_opts.h"
 
-#include <helper.h>
 
 static bool starts_with(const char * str, const char * prefix) {
-    uint32_t n = (uint32_t) strlen(prefix);
+    uint64_t n = strlen(prefix);
 
     if(strlen(str) < n) { return (false); }
 
@@ -203,7 +202,18 @@ int32_t flash_get_opts(struct flash_opts* o, int32_t ac, char** av) {
             if(result != 0) {
                 return (bad_arg ("--flash"));
             } else {
-                o->flash_size = (uint32_t) flash_size;
+                o->flash_size = flash_size;
+            }
+        } else if(strcmp(av[0], "--remote") == 0 || starts_with(av[0], "--remote=")) {
+            if(strcmp(av[0], "--remote") == 0) {
+                ac--;
+                av++;
+
+                if(ac < 1) { return (-1); }
+
+                o->remote = av[0];
+            } else {
+                o->remote = av[0] + strlen("--remote=");
             }
         } else if(strcmp(av[0], "--connect-under-reset") == 0) {
             o->connect = CONNECT_UNDER_RESET;
@@ -263,7 +273,7 @@ int32_t flash_get_opts(struct flash_opts* o, int32_t ac, char** av) {
             if(result != 0) {
                 return bad_arg ("size");
             } else {
-                o->size = (uint32_t) size;
+                o->size = size;
             }
         }
 
@@ -287,7 +297,7 @@ int32_t flash_get_opts(struct flash_opts* o, int32_t ac, char** av) {
             if(result != 0) {
                 return bad_arg ("size");
             } else {
-                o->size = (uint32_t) size;
+                o->size = size;
             }
 
             break;
@@ -304,7 +314,7 @@ int32_t flash_get_opts(struct flash_opts* o, int32_t ac, char** av) {
                 if(result != 0) {
                     return bad_arg("option bytes read: invalid size");
                 } else {
-                    o->size = (uint32_t) size;
+                    o->size = size;
                 }
             }
             break;

@@ -1,11 +1,26 @@
-/*
- * File: common_flash.h
- *
- * Flash operations
- */
+/**
+  ******************************************************************************
+  * @file           : common_flash.h
+  * @brief          : Flash operations
+  * @copyright      : Copyright (c) 2026 stlink-org. All rights reserved.
+  * @date           : 2026-07-27
+  * SPDX-License-Identifier: BSD-3-Clause
+  *
+  * This file is licensed under the BSD 3-Clause License.
+  * See the LICENSE file in the project root for full license information.
+  ******************************************************************************
+  */
 
 #ifndef COMMON_FLASH_H
 #define COMMON_FLASH_H
+
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+
+#include <stlink.h>
+
 
 #define BANK_1 0
 #define BANK_2 1

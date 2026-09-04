@@ -1,17 +1,19 @@
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
+/**
+  ******************************************************************************
+  * @file           : semihosting.c
+  * @brief          : Tool: st-util
+  * @copyright      : Copyright (c) 2026 stlink-org. All rights reserved.
+  * @author         : Fabien-Chouteau (Fabien-Chouteau)
+  * @date           : 2026-07-27
+  * SPDX-License-Identifier: BSD-3-Clause
+  *
+  * This file is licensed under the BSD 3-Clause License.
+  * See the LICENSE file in the project root for full license information.
+  ******************************************************************************
+  */
 
-#include <errno.h>
-#include <fcntl.h>
-#include <unistd.h>
-
-#include <stlink.h>
 #include "semihosting.h"
 
-#include <logging.h>
-#include <read_write.h>
 
 static int32_t mem_read_u8(stlink_t *sl, uint32_t addr, uint8_t *data) {
     int32_t offset = addr % 4;
@@ -194,7 +196,9 @@ int32_t do_semihosting (stlink_t *sl, uint32_t r0, uint32_t r1, uint32_t *ret) {
         if (name_len == 4 && strncmp(":tt", name, 3) == 0) {
             if (mode <= 3) {
                 *ret = STDIN_FILENO;
-            } else if (mode >= 4 && mode <= 11) {
+            } else if (mode >= 4 && mode <= 7) {
+                *ret = STDOUT_FILENO;
+            } else if (mode >= 8 && mode <= 11) {
                 *ret = STDERR_FILENO;
             } else {
                 DLOG("Semihosting SYS_OPEN error: invalid mode %d for :tt\n", mode);

@@ -1,52 +1,29 @@
-/*
- * Copyright (c) 2011 Peter Zotov <whitequark@whitequark.org>
- * Use of this source code is governed by a BSD-style license that can be found in the LICENSE file.
- */
-
-#include <ctype.h>
-#include <getopt.h>
-#include <signal.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <sys/types.h>
-
-#if defined(_MSC_VER)
-#include <stdbool.h>
-#define __attribute__(x)
-#endif
-
-#if defined(_WIN32)
-#include <win32_socket.h>
-#else
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#endif
-
-#include <stlink.h>
-#include <stm32_register.h>
+/**
+  ******************************************************************************
+  * @file           : gdb-server.c
+  * @brief          : Tool: st-util
+  * @copyright      : Copyright (c) 2026 stlink-org. All rights reserved.
+  * @author         : Peter Zotov (whitequark)
+  * @date           : 2026-07-27
+  * SPDX-License-Identifier: BSD-3-Clause
+  *
+  * This file is licensed under the BSD 3-Clause License.
+  * See the LICENSE file in the project root for full license information.
+  ******************************************************************************
+  */
 
 #include "gdb-server.h"
 #include "gdb-remote.h"
 #include "memory-map.h"
 #include "semihosting.h"
 
-#include <chipid.h>
-#include <common_flash.h>
-#include <flash_loader.h>
-#include <helper.h>
-#include <logging.h>
-#include <read_write.h>
-#include <usb.h>
 
 #define FLASH_BASE 0x08000000
 
 // Semihosting doesn't have a short option, we define a value to identify it
 #define SEMIHOSTING_OPTION 128
 #define SERIAL_OPTION 127
+#define REMOTE_OPTION 126
 
 // always update the FLASH_PAGE before each use, by calling stlink_calculate_pagesize
 #define FLASH_PAGE (sl->flash_pgsz)
@@ -74,6 +51,7 @@ typedef struct _st_state_t {
     char serialnumber[STLINK_SERIAL_BUFFER_SIZE];
     bool semihosting;
     const char* current_memory_map;
+    const char* remote; // --remote=host[:port]: drive an ST-LINK on another machine
 } st_state_t;
 
 
@@ -123,6 +101,7 @@ int32_t parse_options(int32_t argc, char** argv, st_state_t *st) {
         {"version", no_argument, NULL, 'V'},
         {"semihosting", no_argument, NULL, SEMIHOSTING_OPTION},
         {"serial", required_argument, NULL, SERIAL_OPTION},
+        {"remote", required_argument, NULL, REMOTE_OPTION},
         {0, 0, 0, 0},
     };
     const char * help_str = "%s - usage:\n\n"
@@ -146,6 +125,8 @@ int32_t parse_options(int32_t argc, char** argv, st_state_t *st) {
                             "\t\t\tEnable semihosting support.\n"
                             "  --serial <serial>\n"
                             "\t\t\tUse a specific serial number.\n"
+                            "  --remote <host[:port]>\n"
+                            "\t\t\tDrive an ST-LINK served by st-server on another machine.\n"
                             "\n"
                             "The STLINK device to use can be specified in the environment\n"
                             "variable STLINK_DEVICE on the format <USB_BUS>:<USB_ADDR>.\n"
@@ -209,7 +190,10 @@ int32_t parse_options(int32_t argc, char** argv, st_state_t *st) {
             break;
         case SERIAL_OPTION:
             printf("use serial %s\n", optarg);
-            memcpy(st->serialnumber, optarg, STLINK_SERIAL_BUFFER_SIZE);
+            snprintf(st->serialnumber, STLINK_SERIAL_BUFFER_SIZE, "%s", optarg);
+            break;
+        case REMOTE_OPTION:
+            st->remote = optarg;
             break;
         }
 
@@ -240,7 +224,11 @@ int32_t main(int32_t argc, char** argv) {
 
     init_chipids (STLINK_CHIPS_DIR);
 
-    sl = stlink_open_usb(state.logging_level, state.connect_mode, state.serialnumber, state.freq);
+    if(state.remote) {
+        sl = stlink_open_remote_str(state.logging_level, state.remote, state.connect_mode, state.freq);
+    } else {
+        sl = stlink_open_usb(state.logging_level, state.connect_mode, state.serialnumber, state.freq);
+    }
     if(sl == NULL) { return (1); }
 
     if(sl->chip_id == STM32_CHIPID_UNKNOWN) {
@@ -364,7 +352,7 @@ char* make_memory_map(stlink_t *sl) {
         snprintf(map, sz, memory_map_template_F4,
                  sl->sram_size);
     } else if(sl->chip_id == STM32_CHIPID_F4_DE) {
-        strcpy(map, memory_map_template_F4_DE);
+        snprintf(map, sz, "%s", memory_map_template_F4_DE);
     } else if(sl->core_id == STM32_CORE_ID_M7F_SWD) {
         snprintf(map, sz, memory_map_template_F7,
                  sl->sram_size);
@@ -373,7 +361,7 @@ char* make_memory_map(stlink_t *sl) {
                  sl->flash_size,
                  sl->flash_pgsz);
     } else if(sl->chip_id == STM32_CHIPID_F4_HD) {
-        strcpy(map, memory_map_template_F4_HD);
+        snprintf(map, sz, "%s", memory_map_template_F4_HD);
     } else if(sl->chip_id == STM32_CHIPID_F2) {
         snprintf(map, sz, memory_map_template_F2,
                  sl->flash_size,
@@ -991,7 +979,7 @@ int32_t serve(stlink_t *sl, st_state_t *st) {
 
             uint32_t queryNameLength = (uint32_t) (separator - &packet[1]);
             char* queryName = calloc(1, queryNameLength + 1);
-            strncpy(queryName, &packet[1], queryNameLength);
+            memcpy(queryName, &packet[1], queryNameLength);
 
             DLOG("query: %s;%s\n", queryName, params);
 
@@ -1035,7 +1023,7 @@ int32_t serve(stlink_t *sl, st_state_t *st) {
                     } else {
                         reply = calloc(1, length + 2);
                         reply[0] = 'm';
-                        strncpy(&reply[1], data, length);
+                        memcpy(&reply[1], data, length);
                     }
                 }
             } else if(!strncmp(queryName, "Rcmd,", 4)) {
@@ -1351,7 +1339,7 @@ int32_t serve(stlink_t *sl, st_state_t *st) {
             reply = calloc(1, 8 * 16 + 1);
 
             for(int32_t i = 0; i < 16; i++) {
-                sprintf(&reply[i * 8], "%08x", (uint32_t) htonl(regp.r[i]));
+                snprintf(&reply[i * 8], 9, "%08x", (uint32_t) htonl(regp.r[i]));
             }
 
             break;
@@ -1400,7 +1388,7 @@ int32_t serve(stlink_t *sl, st_state_t *st) {
             if(reply == NULL) {
                 // if reply is set to "E00", skip
                 reply = calloc(1, 8 + 1);
-                sprintf(reply, "%08x", myreg);
+                snprintf(reply, 9, "%08x", myreg);
             }
 
             break;
@@ -1450,7 +1438,7 @@ int32_t serve(stlink_t *sl, st_state_t *st) {
 
             for(int32_t i = 0; i < 16; i++) {
                 char str[9] = {0};
-                strncpy(str, &packet[1 + i * 8], 8);
+                memcpy(str, &packet[1 + i * 8], 8);
                 uint32_t reg = (uint32_t) strtoul(str, NULL, 16);
                 ret = stlink_write_reg(sl, ntohl(reg), i);
 
@@ -1652,7 +1640,11 @@ int32_t serve(stlink_t *sl, st_state_t *st) {
 
             stlink_close(sl);
 
-            sl = stlink_open_usb(st->logging_level, st->connect_mode, st->serialnumber, st->freq);
+            if(st->remote) {
+                sl = stlink_open_remote_str(st->logging_level, st->remote, st->connect_mode, st->freq);
+            } else {
+                sl = stlink_open_usb(st->logging_level, st->connect_mode, st->serialnumber, st->freq);
+            }
             if(sl == NULL || sl->chip_id == STM32_CHIPID_UNKNOWN) { cleanup(0); }
 
             connected_stlink = sl;
