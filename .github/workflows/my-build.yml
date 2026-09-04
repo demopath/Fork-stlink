@@ -1,30 +1,21 @@
-name: C/C++ CI
+name: my-build
 
-on:
-  push:
-    branches: [master, develop, testing]
-  pull_request:
-    branches: [master, develop, testing]
+on: [push, workflow_dispatch]
 
 jobs:
-  # Windows builds with MSVC
-  windows_build:
-    name: Windows MSVC
+  build:
     runs-on: windows-latest
+
     steps:
       - uses: actions/checkout@v4
 
-      # Install Visual Studio 2022 Build Tools
-      - name: Install Visual Studio 2022 Build Tools
+      - name: cmake 项目
         run: |
-          choco install visualstudio2022buildtools -y --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
-
-      - name: Configure project (Release)
-        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build project (Release)
-        run: cmake --build build --config Release --parallel 4
-
-      - name: Run tests (Release)
-        working-directory: build
-        run: ctest --output-on-failure --parallel 4
+          cmake -B build -G "Visual Studio 17 2022" -A Win32 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded .
+          cmake --build build --config Release
+      - name: 上传 stlink_build
+        uses: actions/upload-artifact@v4
+        with:
+          name: stlink-msvc
+          path: build/dist
+            
