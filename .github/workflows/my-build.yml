@@ -5,14 +5,11 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
       - uses: actions/checkout@v4
-
       - name: cmake 项目
         run: |
-          cmake -B build -G "Visual Studio 18 2026" -A Win32 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded .
-          cmake --build build --config Release
+          gen_binaries_win.sh
       - name: 上传 stlink_build
         uses: actions/upload-artifact@v4
         with:
