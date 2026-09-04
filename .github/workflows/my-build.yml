@@ -1,18 +1,60 @@
-name: my-build
+name: Build and Release Windows Binary
 
-on: [push, workflow_dispatch]
+on:
+  push:
+    branches:
+      - master
+      - main
+      - testing
+      - develop
+  pull_request:
+    branches:
+      - master
+      - main
+  workflow_dispatch: # 支持在 GitHub 页面手动点击触发运行
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-windows:
+    name: Build Windows x64 Binary
+    runs-on: windows-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - name: cmake 项目
+      # 1. 检出源代码 (包含子模块)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # 2. 设置 MSVC 编译环境
+      - name: Setup MSVC developer command prompt
+        uses: ilammy/msvc-dev-cmd@v1
+
+      # 3. 设置 CMake 和 Ninja
+      - name: Setup CMake
+        uses: jtimoneda/get-cmake-action@v1.0.0
+        with:
+          cmakeVersion: '3.26.x'
+
+      # 4. CMake 配置与构建
+      - name: Configure and Build STLink
+        shell: cmd
         run: |
-          bash ./gen_binaries_win.sh
-      - name: 上传 stlink_build
+          mkdir build
+          cd build
+          cmake -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./stlink-windows ..
+          cmake --build . --config Release --target ALL_BUILD
+          cmake --build . --config Release --target INSTALL
+
+      # 5. 打包编译产物
+      - name: Archive build output
+        shell: powershell
+        run: |
+          Compress-Archive -Path ./build/stlink-windows/* -DestinationPath ./stlink-windows-x64.zip
+
+      # 6. 上传 Artifact（所有构建都会在 Actions 页面提供 90 天下载）
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: stlink-msvc
-          path: build/dist
-            
+          name: stlink-windows-x64
+          path: stlink-windows-x64.zip
+          retention-days: 90
