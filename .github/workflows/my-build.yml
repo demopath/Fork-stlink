@@ -9,7 +9,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: cmake 项目
         run: |
-          ./gen_binaries_win.sh
+          bash ./gen_binaries_win.sh
       - name: 上传 stlink_build
         uses: actions/upload-artifact@v4
         with:
